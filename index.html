@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المحاضرة 8 — Layout Managers: pack · grid · place | Sunshine T Academy</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1f33'/%3E%3Cg stroke='%2338bdf8' stroke-width='2' opacity='.55'%3E%3Cpath d='M0 22h64M0 42h64M22 0v64M42 0v64'/%3E%3C/g%3E%3Cg stroke='%23fbbf24' stroke-width='4.5' stroke-linecap='round'%3E%3Cline x1='32' y1='10' x2='32' y2='17'/%3E%3Cline x1='32' y1='47' x2='32' y2='54'/%3E%3Cline x1='10' y1='32' x2='17' y2='32'/%3E%3Cline x1='47' y1='32' x2='54' y2='32'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='11' fill='%23fbbf24'/%3E%3Ccircle cx='28' cy='30' r='1.8' fill='%230b1f33'/%3E%3Ccircle cx='36' cy='30' r='1.8' fill='%230b1f33'/%3E%3Cpath d='M27 35q5 4 10 0' stroke='%230b1f33' stroke-width='2.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* blueprint dominant family */
+  --ink:#0b1f33; --ink2:#123350; --ink3:#1b4a6b; --line-bp:rgba(56,189,248,.16);
+  /* manager accents */
+  --pack:#f97316; --grid:#2563eb; --place:#db2777; --frame:#0d9488;
+  /* semantic */
+  --ok:#10b981; --warn:#f59e0b; --bad:#ef4444; --info:#3b82f6; --violet:#8b5cf6;
+  /* neutrals */
+  --paper:#ffffff; --cool:#f2f7fb; --warm:#fffaf0; --text:#0f2b3d; --mut:#5b7387; --line:#dbeaf2;
+  --code-bg:#0b1a26; --code-tx:#d6e6ee;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scrollbar-color:#38bdf8 #08192a;scrollbar-width:thin}
+body{font-family:'Cairo','Segoe UI',Tahoma,sans-serif;color:var(--text);line-height:1.85;min-height:100vh;padding-bottom:60px;overflow-x:hidden;
+  background:linear-gradient(160deg,#071626 0%,var(--ink) 35%,var(--ink2) 68%,#0d3b57 100%)}
+body::before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;background:
+  radial-gradient(820px 480px at 88% -8%,rgba(251,191,36,.16),transparent 62%),
+  radial-gradient(700px 480px at 4% 104%,rgba(37,99,235,.28),transparent 62%),
+  radial-gradient(560px 380px at 50% 48%,rgba(13,148,136,.12),transparent 70%)}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.85;
+  background-image:
+    linear-gradient(var(--line-bp) 1px,transparent 1px),
+    linear-gradient(90deg,var(--line-bp) 1px,transparent 1px),
+    linear-gradient(rgba(56,189,248,.06) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(56,189,248,.06) 1px,transparent 1px);
+  background-size:120px 120px,120px 120px,24px 24px,24px 24px;
+  mask-image:radial-gradient(ellipse at 50% 20%,#000 35%,transparent 85%)}
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-track{background:#08192a}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#38bdf8,#2563eb);border-radius:10px;border:3px solid #08192a}
+::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#7dd3fc,#60a5fa)}
+.ghost{position:fixed;z-index:-1;border-radius:8px;border:1px solid rgba(56,189,248,.22);background:rgba(56,189,248,.05);animation:floaty 14s ease-in-out infinite;pointer-events:none;overflow:hidden}
+.ghost i{display:block;height:12px;background:rgba(56,189,248,.16)}
+.ghost b{display:block;height:1px;background:rgba(56,189,248,.18);margin:9px 6px}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-24px) rotate(1.5deg)}}
+/* ===== nav ===== */
+.topnav{position:sticky;top:0;z-index:200;display:flex;align-items:center;gap:14px;padding:10px 22px;background:rgba(7,22,38,.88);backdrop-filter:blur(14px);border-bottom:1px solid rgba(56,189,248,.32)}
+.brand{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;white-space:nowrap}
+.brand svg{width:32px;height:32px;filter:drop-shadow(0 0 9px rgba(251,191,36,.7))}
+.brand .rays{transform-origin:32px 32px;animation:spin 26s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.links{display:flex;gap:3px;margin-inline-start:auto;flex-wrap:wrap}
+.links a{color:#a5d8f5;text-decoration:none;font-size:.8rem;font-weight:700;padding:5px 11px;border-radius:999px;transition:.2s}
+.links a:hover,.links a.on{background:rgba(56,189,248,.28);color:#fff}
+#readbar{position:absolute;bottom:-3px;right:0;height:3px;width:0;background:linear-gradient(90deg,var(--pack),var(--grid),var(--place),var(--frame));transition:width .15s}
+/* ===== container ===== */
+.container{max-width:1120px;margin:26px auto;background:var(--paper);border-radius:16px;overflow:hidden;box-shadow:0 30px 80px rgba(1,10,20,.62),0 0 0 1px rgba(56,189,248,.18)}
+.appbar{display:flex;align-items:center;gap:10px;background:#071626;color:#7fb0cc;padding:9px 16px;font-size:.8rem;direction:ltr}
+.dots{display:flex;gap:7px}
+.dots b{width:13px;height:13px;border-radius:50%;cursor:pointer;transition:.2s}
+.dots b:hover{transform:scale(1.25)}
+.d-r{background:#ff5f57}.d-y{background:#febc2e}.d-g{background:#28c840}
+.fname{margin-left:10px;font-family:'JetBrains Mono',monospace}
+.acad{margin-left:auto;color:#fbbf24;font-weight:700}
+/* ===== header ===== */
+.header{background:linear-gradient(135deg,var(--frame) 0%,#0ea5e9 45%,var(--grid) 100%);color:#fff;padding:44px 34px 38px;text-align:center;position:relative;overflow:hidden}
+.header::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.09) 1px,transparent 1px);background-size:30px 30px;opacity:.7}
+.header::after{content:"📐";position:absolute;font-size:10rem;opacity:.12;bottom:-34px;right:-14px;transform:rotate(12deg)}
+.header>*{position:relative;z-index:1}
+.lvl{display:inline-block;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);padding:6px 20px;border-radius:999px;font-weight:800;font-size:.9rem;margin-bottom:14px}
+.big{font-size:4.2rem;display:block;animation:bob 3.4s ease-in-out infinite;filter:drop-shadow(0 8px 18px rgba(0,0,0,.3))}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-12px) rotate(3deg)}}
+.header h1{font-size:2.35rem;font-weight:900;margin:8px 0 6px;text-shadow:0 3px 10px rgba(0,0,0,.28)}
+.sub{font-size:1.14rem;opacity:.97;font-weight:600}
+.quote{display:inline-block;margin-top:16px;background:rgba(255,255,255,.16);border:1px dashed rgba(255,255,255,.55);padding:9px 22px;border-radius:12px;font-style:italic}
+.meta,.plan{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:18px}
+.meta span{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.34);padding:5px 15px;border-radius:999px;font-size:.85rem;font-weight:700}
+.plan b{background:rgba(7,22,38,.4);padding:4px 12px;border-radius:8px;font-size:.78rem}
+/* ===== content ===== */
+.content{padding:34px}
+section{background:var(--cool);border-radius:16px;border-right:6px solid var(--grid);padding:28px;margin-bottom:32px;scroll-margin-top:84px}
+section h2{color:#1d4ed8;font-size:1.58rem;font-weight:900;padding-bottom:10px;border-bottom:3px solid var(--grid);margin-bottom:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+section h3{color:var(--ink2);font-size:1.2rem;font-weight:800;margin:20px 0 10px}
+section h4{font-size:1.05rem;margin:16px 0 8px}
+section p{font-size:1.02rem;color:#28495c;margin-bottom:12px}
+section ul,section ol{padding-right:24px;margin:10px 0}
+section li{margin-bottom:8px}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .6s,transform .6s}
+.reveal.on{opacity:1;transform:none}
+.badge{display:inline-block;padding:4px 15px;border-radius:999px;color:#fff;font-weight:800;font-size:.82rem}
+.b1{background:var(--ok)}.b2{background:var(--warn)}.b3{background:var(--bad)}.b4{background:var(--violet)}
+.mtag{display:inline-block;padding:3px 12px;border-radius:8px;color:#fff;font-weight:800;font-size:.78rem;font-family:'JetBrains Mono',monospace;direction:ltr}
+.m-pack{background:var(--pack)}.m-grid{background:var(--grid)}.m-place{background:var(--place)}.m-frame{background:var(--frame)}
+.callout{padding:16px 20px;border-radius:12px;margin:16px 0;border-right:5px solid;font-size:.97rem}
+.c-info{background:#e0f2fe;border-color:var(--info)}
+.c-tip{background:#d1fae5;border-color:var(--ok)}
+.c-warn{background:#fee2e2;border-color:var(--bad)}
+.c-star{background:var(--warm);border-color:var(--warn)}
+.callout b{display:block;margin-bottom:5px}
+.review{background:linear-gradient(135deg,#fef3c7,#fde68a);border:2px solid var(--warn);border-radius:14px;padding:20px;margin:14px 0}
+.review h3{color:#92400e;margin-top:0}
+.review ul{list-style:none;padding:0}
+.review li{padding:7px 4px;border-bottom:1px dashed #d97706}
+.review li:last-child{border:none}
+.obj-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:14px;margin-top:14px}
+.obj{background:#fff;border-radius:14px;padding:18px;border-top:4px solid var(--grid);box-shadow:0 4px 14px rgba(37,99,235,.12);transition:.25s}
+.obj:hover{transform:translateY(-5px);box-shadow:0 10px 24px rgba(37,99,235,.22)}
+.obj .ic{font-size:1.9rem}
+.obj h4{color:#1d4ed8;font-size:1rem;margin:6px 0 4px}
+.obj p{font-size:.86rem;margin:0;color:var(--mut)}
+table.tbl{width:100%;border-collapse:collapse;margin:14px 0;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.08);font-size:.92rem}
+.tbl th{background:linear-gradient(135deg,var(--ink2),var(--grid));color:#fff;padding:11px 12px;font-weight:800;text-align:right}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl tr:nth-child(even) td{background:#f6fbfd}
+.tbl tr:hover td{background:#e0f2fe}
+code{background:#e0f2fe;color:#0e5f8a;padding:2px 7px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:.85em;direction:ltr;display:inline-block}
+.codewrap{margin:16px 0;border-radius:12px;overflow:hidden;border:2px solid #0b3d52;box-shadow:0 6px 18px rgba(4,20,34,.3)}
+.codebar{display:flex;align-items:center;justify-content:space-between;background:#0b3d52;color:#a5d8f5;padding:7px 14px;font-size:.8rem;direction:ltr;gap:10px}
+.codebar .fn{font-family:'JetBrains Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.copybtn{background:linear-gradient(135deg,var(--ok),#059669);color:#fff;border:none;padding:5px 14px;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:800;font-size:.78rem;transition:.2s;flex:none}
+.copybtn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(16,185,129,.5)}
+pre.code{background:var(--code-bg);color:var(--code-tx);padding:18px 20px;font-family:'JetBrains Mono',Consolas,monospace;font-size:.9rem;line-height:1.8;direction:ltr;text-align:left;white-space:pre;overflow-x:auto}
+pre.code::-webkit-scrollbar{height:10px}
+pre.code::-webkit-scrollbar-track{background:#06121b}
+pre.code::-webkit-scrollbar-thumb{background:#1b4a6b;border-radius:8px;border:2px solid #06121b}
+.kw{color:#c586c0;font-weight:bold}.fnc{color:#dcdcaa}.str{color:#ce9178}.num{color:#b5cea8}.cmt{color:#6a9955;font-style:italic}.vr{color:#9cdcfe}
+.btn{border:none;padding:10px 18px;border-radius:10px;font-family:inherit;font-weight:800;font-size:.86rem;cursor:pointer;transition:.2s;color:#fff}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.08)}
+.btn:active{transform:scale(.96)}
+.btn-p{background:linear-gradient(135deg,var(--grid),#0ea5e9)}
+.btn-g{background:linear-gradient(135deg,var(--ok),#059669)}
+.btn-a{background:linear-gradient(135deg,var(--pack),#d97706)}
+.btn-r{background:linear-gradient(135deg,var(--bad),#dc2626)}
+.btn-t{background:linear-gradient(135deg,var(--frame),#0f766e)}
+.btn-ghost{background:#dbeafe;color:#1d4ed8}
+/* ===== LAB ===== */
+.lab{display:grid;grid-template-columns:1.25fr 1fr;gap:18px;margin-top:16px}
+.stage{position:relative;border-radius:14px;height:400px;border:3px solid #0b3d52;overflow:hidden;display:grid;place-items:center;
+  background-image:linear-gradient(rgba(56,189,248,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.09) 1px,transparent 1px),linear-gradient(150deg,#071626,#123350 60%,#0d3b57);
+  background-size:24px 24px,24px 24px,cover}
+.stage .ruler{position:absolute;top:0;left:0;right:0;height:14px;background:rgba(7,22,38,.7);border-bottom:1px solid rgba(56,189,248,.3);
+  background-image:repeating-linear-gradient(90deg,rgba(56,189,248,.5) 0 1px,transparent 1px 20px)}
+.stage .stagelabel{position:absolute;bottom:6px;left:10px;color:rgba(165,216,245,.5);font-size:.66rem;font-family:'JetBrains Mono',monospace;direction:ltr}
+.tkwin{position:relative;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 16px 38px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25)}
+.tk-bar{display:flex;align-items:center;gap:6px;background:#0f2b38;color:#dbeafe;padding:0 8px;direction:ltr;flex:none}
+.tk-bar .mt{flex:1;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tk-bar .mb{border:none;background:#25455a;color:#cbd5e1;border-radius:4px;display:grid;place-items:center;flex:none;cursor:default}
+.tk-bar .mb.x{background:#7f1d1d;color:#fecaca}
+.tk-body{flex:1;position:relative;overflow:hidden;transition:background .25s}
+.wgt{border-radius:6px;color:#fff;font-weight:800;display:grid;place-items:center;cursor:pointer;white-space:nowrap;overflow:hidden;
+  box-shadow:0 3px 9px rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.25);transition:box-shadow .18s,outline .18s}
+.wgt:hover{box-shadow:0 6px 16px rgba(0,0,0,.4)}
+.wgt.sel{outline:3px solid #fbbf24;outline-offset:2px;z-index:3}
+.parcel{display:flex;align-items:center;justify-content:center;min-width:0;min-height:0}
+.parcel.guided{outline:1px dashed rgba(251,191,36,.7);outline-offset:-1px}
+.gridguide{position:absolute;inset:0;display:grid;pointer-events:none;z-index:0}
+.gridguide i{border:1px dashed rgba(56,189,248,.55)}
+.crosshair{position:absolute;inset:0;pointer-events:none;z-index:0}
+.crosshair i{position:absolute;background:rgba(219,39,119,.6)}
+.inspector{background:#fff;border:2px solid var(--line);border-radius:12px;padding:13px 16px;margin-top:12px}
+.inspector h4{color:#1d4ed8;font-size:.98rem;margin:0 0 5px}
+.inspector p{font-size:.86rem;color:var(--mut);margin-bottom:8px}
+.inspector .ic{background:var(--code-bg);color:#a5f3fc;font-family:'JetBrains Mono',monospace;font-size:.76rem;direction:ltr;text-align:left;padding:9px 12px;border-radius:8px;white-space:pre;overflow-x:auto}
+.lablog{background:#06121b;color:#7dd3fc;border-radius:10px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:.73rem;direction:ltr;text-align:left;height:92px;overflow-y:auto;margin-top:12px}
+.lablog div{padding:1px 0;border-bottom:1px dotted rgba(125,211,252,.15)}
+.controls{background:#fff;border-radius:14px;border:2px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:11px;max-height:660px;overflow-y:auto}
+.controls::-webkit-scrollbar{width:9px}
+.controls::-webkit-scrollbar-track{background:#e0f2fe;border-radius:8px}
+.controls::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#38bdf8,#2563eb);border-radius:8px;border:2px solid #e0f2fe}
+.cg{border:2px dashed #bae6fd;border-radius:12px;padding:11px}
+.cg>h4{color:#0e5f8a;font-size:.9rem;margin:0 0 9px;display:flex;align-items:center;gap:7px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.seg button{border:2px solid var(--line);background:#f6fbfd;border-radius:9px;padding:8px 4px;font-family:'JetBrains Mono',monospace;font-weight:800;font-size:.8rem;cursor:pointer;color:var(--mut);transition:.18s}
+.seg button:hover{border-color:#93c5fd}
+.seg button.on{color:#fff;border-color:transparent}
+.seg button[data-m="pack"].on{background:var(--pack)}
+.seg button[data-m="grid"].on{background:var(--grid)}
+.seg button[data-m="place"].on{background:var(--place)}
+.ctl{margin-bottom:9px}
+.ctl label{display:flex;justify-content:space-between;font-size:.8rem;font-weight:800;color:#28495c;margin-bottom:3px}
+.ctl label output{color:var(--grid);font-family:'JetBrains Mono',monospace}
+.ctl input[type=range]{width:100%;accent-color:var(--grid);height:20px;cursor:pointer}
+.ctl select{width:100%;padding:7px 9px;border:2px solid var(--line);border-radius:9px;font-family:inherit;font-weight:700;font-size:.83rem;background:#fff;cursor:pointer}
+.ctl input[type=color]{width:44px;height:32px;border:2px solid var(--line);border-radius:8px;cursor:pointer;padding:2px;background:#fff}
+.swatches{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.sw{width:24px;height:24px;border-radius:7px;border:2px solid rgba(0,0,0,.14);cursor:pointer;transition:.15s}
+.sw:hover{transform:scale(1.18)}
+.check{display:flex;align-items:center;gap:8px;font-size:.83rem;font-weight:800;color:#28495c;cursor:pointer;margin-bottom:6px}
+.check input{width:17px;height:17px;accent-color:var(--grid);cursor:pointer}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:30px;height:30px;border-radius:8px;border:2px solid var(--line);background:#f6fbfd;font-weight:900;cursor:pointer;color:var(--grid);font-size:1rem;line-height:1}
+.stepper button:hover{background:#dbeafe}
+.stepper span{flex:1;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:800;background:#f1f5f9;border-radius:8px;padding:4px}
+.compass{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.compass button{aspect-ratio:1;border:2px solid var(--line);background:#f6fbfd;border-radius:7px;cursor:pointer;font-size:.66rem;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--mut);transition:.15s;display:grid;place-items:center}
+.compass button:hover{border-color:#93c5fd}
+.compass button.on{background:var(--grid);color:#fff;border-color:transparent}
+.stretchrow{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:4px}
+.stretchrow button{border:2px solid var(--line);background:#f6fbfd;border-radius:7px;padding:5px 2px;cursor:pointer;font-size:.68rem;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--mut)}
+.stretchrow button.on{background:var(--frame);color:#fff;border-color:transparent}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.actions .btn{flex:1;min-width:92px;font-size:.78rem;padding:9px 6px}
+.labcode.flash pre{animation:cf .5s}
+@keyframes cf{0%{box-shadow:inset 0 0 0 3px var(--warn)}100%{box-shadow:inset 0 0 0 0 transparent}}
+/* conflict demo */
+.conflict{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+.cf-card{background:#fff;border-radius:14px;border:3px solid var(--line);overflow:hidden}
+.cf-card.bad{border-color:#fecaca}
+.cf-card.good{border-color:#a7f3d0}
+.cf-head{padding:10px 14px;font-weight:800;font-size:.92rem;color:#fff}
+.cf-card.bad .cf-head{background:linear-gradient(135deg,var(--bad),#b91c1c)}
+.cf-card.good .cf-head{background:linear-gradient(135deg,var(--ok),#047857)}
+.cf-win{height:190px;background:#eef4fa;position:relative;padding:10px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.cf-w{background:var(--grid);color:#fff;border-radius:6px;padding:7px;text-align:center;font-weight:800;font-size:.8rem;opacity:0;transform:translateY(8px);transition:.35s}
+.cf-w.show{opacity:1;transform:none}
+.cf-w.p{background:var(--pack)}
+.cf-overlay{position:absolute;inset:0;background:rgba(127,29,29,.9);color:#fff;display:none;place-items:center;text-align:center;padding:16px;font-weight:800}
+.cf-overlay.show{display:grid;animation:pop .3s}
+.cf-overlay .spin{width:34px;height:34px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;margin:0 auto 10px;animation:spin 1s linear infinite}
+.cf-note{padding:11px 14px;font-size:.85rem;color:var(--mut);background:#f8fafc;min-height:64px}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+/* project */
+.project{background:linear-gradient(135deg,#e0f2fe,#ede9fe);border:3px solid var(--grid);border-radius:16px;padding:22px;margin:16px 0}
+.project h3{color:#1d4ed8;margin-top:0}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(178px,1fr));gap:12px;margin:14px 0}
+.stp{background:#fff;border-radius:12px;padding:14px;border-right:4px solid var(--frame);font-size:.87rem;font-weight:700}
+.stp b{color:#0f766e;display:block;margin-bottom:4px}
+.loginmock{background:#eef4fa;border-radius:12px;padding:22px;display:grid;place-items:center;margin:14px 0}
+.lm-card{background:#fff;border-radius:10px;padding:20px 22px;width:min(340px,100%);box-shadow:0 10px 26px rgba(0,0,0,.14)}
+.lm-card h4{color:var(--grid);font-size:1.1rem;margin:0}
+.lm-card small{color:#94a3b8;display:block;margin-bottom:14px;font-size:.75rem}
+.lm-row{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;margin-bottom:9px}
+.lm-row label{font-size:.82rem;font-weight:800}
+.lm-row input{padding:7px 9px;border:2px solid var(--line);border-radius:6px;font-family:inherit;font-size:.85rem;width:100%}
+.lm-btns{display:flex;gap:8px;margin-top:14px}
+.lm-btns button{flex:1;border:none;border-radius:6px;padding:9px;font-family:inherit;font-weight:800;cursor:pointer;font-size:.85rem}
+.lm-btns .go{background:var(--grid);color:#fff}
+.lm-btns .cl{background:#e2e8f0;color:var(--text)}
+.lm-hint{color:#94a3b8;font-size:.72rem;margin-top:11px}
+/* quiz */
+.quizhead{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.qscore{background:linear-gradient(135deg,var(--grid),#0ea5e9);color:#fff;padding:8px 22px;border-radius:999px;font-weight:900;font-size:1.05rem}
+.qcard{background:#fff;border-radius:13px;padding:18px;margin-bottom:14px;border-right:5px solid var(--grid);box-shadow:0 3px 10px rgba(0,0,0,.06)}
+.qcard h4{color:var(--text);font-size:1rem;margin:0 0 12px}
+.qopts{display:grid;gap:8px}
+.qopt{background:#f6fbfd;border:2px solid var(--line);border-radius:10px;padding:10px 15px;cursor:pointer;font-family:inherit;font-size:.92rem;font-weight:700;text-align:right;transition:.18s;color:#28495c}
+.qopt:hover:not(:disabled){border-color:var(--grid);background:#e0f2fe;transform:translateX(-4px)}
+.qopt:disabled{cursor:default;opacity:.85}
+.qopt.ok{background:#d1fae5;border-color:var(--ok);color:#065f46;opacity:1}
+.qopt.bad{background:#fee2e2;border-color:var(--bad);color:#991b1b;opacity:1}
+.qwhy{display:none;margin-top:10px;background:var(--warm);border-right:4px solid var(--warn);padding:9px 14px;border-radius:9px;font-size:.86rem}
+.qwhy.show{display:block}
+.qres{display:none;text-align:center;background:linear-gradient(135deg,#d1fae5,#a7f3d0);border:3px solid var(--ok);border-radius:14px;padding:22px;margin-top:14px}
+.qres.show{display:block;animation:pop .4s}
+.qres .bn{font-size:2.6rem;font-weight:900;color:#065f46}
+/* tasks */
+.task{background:#fff;border-radius:13px;padding:18px;margin-bottom:13px;border-right:6px solid;box-shadow:0 3px 10px rgba(0,0,0,.06)}
+.t1{border-color:var(--ok)}.t2{border-color:var(--info)}.t3{border-color:var(--warn)}.t4{border-color:var(--bad)}.t5{border-color:var(--place)}
+.task h4{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:1rem;margin:0 0 8px}
+.pts{background:var(--grid);color:#fff;padding:3px 13px;border-radius:999px;font-size:.78rem;font-weight:900}
+.task p{font-size:.92rem;margin-bottom:8px}
+.hint{background:var(--warm);border-right:4px solid var(--warn);padding:8px 14px;border-radius:9px;font-size:.85rem}
+/* summary */
+.summary{background:linear-gradient(135deg,var(--ink2),var(--grid));border:none;color:#fff}
+.summary h2{color:#fff;border-color:rgba(255,255,255,.4)}
+.summary h3{color:#fde68a}
+.sumgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:16px 0}
+.sumitem{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.26);border-radius:12px;padding:14px}
+.sumitem h4{color:#fde68a;font-size:.95rem;margin:0 0 5px}
+.sumitem code{background:rgba(0,0,0,.3);color:#e0f2fe;font-size:.76rem}
+.golden{list-style:none;padding:0}
+.golden li{background:rgba(255,255,255,.13);border-radius:10px;padding:9px 15px;margin-bottom:8px;font-size:.93rem}
+.golden code{background:rgba(0,0,0,.28);color:#fef3c7}
+.next{background:linear-gradient(135deg,var(--place),var(--pack));border:none;color:#fff;text-align:center}
+.next h2{color:#fff;border:none;justify-content:center}
+.next .big{font-size:3.4rem;animation:none}
+.next h3{color:#fff;font-size:1.42rem}
+.next p{color:rgba(255,255,255,.96)}
+.footer{text-align:center;padding:28px;background:linear-gradient(135deg,#e0f2fe,#ede9fe);border-radius:16px}
+.footer .logo{font-size:1.3rem;font-weight:900;color:#0e5f8a}
+.footer p{font-size:.95rem;color:var(--mut);margin:4px 0}
+#toast{position:fixed;bottom:24px;right:50%;transform:translateX(50%) translateY(20px);background:#071626;color:#fff;padding:11px 26px;border-radius:12px;font-weight:800;font-size:.9rem;z-index:500;opacity:0;pointer-events:none;transition:.3s;box-shadow:0 10px 30px rgba(0,0,0,.5);border:1px solid rgba(56,189,248,.5)}
+#toast.show{opacity:1;transform:translateX(50%) translateY(0)}
+@media(max-width:900px){
+  .lab,.conflict{grid-template-columns:1fr}
+  .links{display:none}
+  .header h1{font-size:1.7rem}
+  .content{padding:18px}
+  section{padding:20px}
+  .controls{max-height:none}
+  .stage{height:330px}
+}
+</style>
+</head>
+<body>
+
+<div class="ghost" style="width:150px;height:96px;top:14%;left:3%"><i></i><b></b><b></b></div>
+<div class="ghost" style="width:112px;height:74px;top:62%;left:6%;animation-delay:-4s"><i></i><b></b></div>
+<div class="ghost" style="width:168px;height:104px;top:26%;right:4%;animation-delay:-7s"><i></i><b></b><b></b></div>
+<div class="ghost" style="width:120px;height:78px;top:77%;right:7%;animation-delay:-2s"><i></i><b></b></div>
+
+<nav class="topnav">
+  <div class="brand">
+    <svg viewBox="0 0 64 64"><g class="rays" stroke="#fbbf24" stroke-width="4.5" stroke-linecap="round"><line x1="32" y1="7" x2="32" y2="16"/><line x1="32" y1="48" x2="32" y2="57"/><line x1="7" y1="32" x2="16" y2="32"/><line x1="48" y1="32" x2="57" y2="32"/><line x1="14" y1="14" x2="20" y2="20"/><line x1="44" y1="44" x2="50" y2="50"/><line x1="50" y1="14" x2="44" y2="20"/><line x1="20" y1="44" x2="14" y2="50"/></g><circle cx="32" cy="32" r="12" fill="#fbbf24"/><circle cx="28" cy="30" r="1.9" fill="#0b1f33"/><circle cx="36" cy="30" r="1.9" fill="#0b1f33"/><path d="M27 35q5 4 10 0" stroke="#0b1f33" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>
+    Sunshine T Academy
+  </div>
+  <div class="links">
+    <a href="#review">المراجعة</a><a href="#why">ليه Layout؟</a><a href="#pack">pack</a><a href="#grid">grid</a><a href="#place">place</a><a href="#frame">Frame</a><a href="#lab">🧪 المختبر</a><a href="#project">المشروع</a><a href="#quiz">الاختبار</a>
+  </div>
+  <div id="readbar"></div>
+</nav>
+
+<div class="container">
+  <div class="appbar">
+    <div class="dots"><b class="d-r" onclick="toast('دي نافذة المحاضرة مش هتقفل 😄 كمّل!')"></b><b class="d-y" onclick="toast('تصغير؟ لأ يا بطل، الترتيب أهم 📐')"></b><b class="d-g" onclick="toast('ملء الشاشة؟ اضغط F11 😉')"></b></div>
+    <span class="fname">layout_managers.py — Level 2</span>
+    <span class="acad">☀️ Sunshine T Academy</span>
+  </div>
+
+  <header class="header">
+    <span class="lvl">🐍 Python Level 2 · المحاضرة 8</span>
+    <span class="big">📐</span>
+    <h1>Layout Managers — pack · grid · place</h1>
+    <div class="sub">رتّب عناصر نافذتك زي المهندس… مش بالعين! 🧭</div>
+    <div class="quote">"الواجهة الحلوة مش ألوان بس… دي عناصر واقفة في مكانها الصح!"</div>
+    <div class="meta"><span>🐍 Python</span><span>🧩 Tkinter</span><span>⏱️ 60 دقيقة</span><span>📦 3 مدراء ترتيب</span><span>🎯 مشروع: نموذج تسجيل دخول</span></div>
+    <div class="plan"><b>5د مراجعة</b><b>5د تشبيه</b><b>15د شرح</b><b>25د مختبر وتطبيق</b><b>5د أخطاء</b><b>5د تحدي</b></div>
+  </header>
+
+  <div class="content">
+
+  <!-- REVIEW -->
+  <section id="review" class="reveal">
+    <h2>🏆 مراجعة سريعة — شنطتك لحد دلوقتي</h2>
+    <div class="review">
+      <h3>✅ من محاضرة GUI &amp; Tkinter:</h3>
+      <ul>
+        <li>🪟 <code>root = tk.Tk()</code> ثم <code>title()</code> و <code>geometry()</code></li>
+        <li>🧩 العناصر: <code>Label</code> · <code>Entry</code> · <code>Button</code></li>
+        <li>🔘 <code>command=say_hello</code> — من غير أقواس!</li>
+        <li>🔁 <code>root.mainloop()</code> في آخر سطر</li>
+      </ul>
+    </div>
+    <div class="review">
+      <h3>✅ من محاضرة Window Properties:</h3>
+      <ul>
+        <li>📐 <code>geometry("600x400+100+50")</code> — عرض × ارتفاع + X + Y</li>
+        <li>🔒 <code>minsize()</code> · <code>maxsize()</code> · <code>resizable()</code></li>
+        <li>🎨 <code>configure(bg=...)</code> والأيقونة والشفافية</li>
+        <li>🚪 <code>protocol("WM_DELETE_WINDOW", on_close)</code> + <code>destroy()</code></li>
+      </ul>
+    </div>
+    <div class="callout c-star">
+      <b>🤔 سؤال تمهيدي:</b>
+      عملنا نافذة وحطينا فيها 3 أزرار… كلهم ظهروا <b>فوق بعض في النص</b>! إزاي نخلي زر جنب زر؟ أو نعمل جدول زي الآلة الحاسبة؟ النهارده هنتعلم <b>مدراء الترتيب</b> — الأدوات اللي بتحدد مكان كل عنصر. 📐
+    </div>
+  </section>
+
+  <!-- GOALS -->
+  <section class="reveal">
+    <h2>🎯 أهداف المحاضرة</h2>
+    <div class="obj-grid">
+      <div class="obj"><span class="ic">📦</span><h4>pack()</h4><p>ترتيب بسيط: side · fill · expand</p></div>
+      <div class="obj"><span class="ic">🔲</span><h4>grid()</h4><p>صفوف وأعمدة: row · column · sticky</p></div>
+      <div class="obj"><span class="ic">📍</span><h4>place()</h4><p>إحداثيات دقيقة: x · y · anchor</p></div>
+      <div class="obj"><span class="ic">🖼️</span><h4>Frame</h4><p>تقسيم النافذة لأقسام مستقلة</p></div>
+      <div class="obj"><span class="ic">↔️</span><h4>weight</h4><p>واجهة تكبر وتصغر مع النافذة</p></div>
+      <div class="obj"><span class="ic">📏</span><h4>الحشو والهوامش</h4><p>padx/pady مقابل ipadx/ipady</p></div>
+    </div>
+  </section>
+
+  <!-- WHY -->
+  <section id="why" class="reveal">
+    <h2>🤔 ليه محتاجين Layout Manager؟</h2>
+    <p>لما بنعمل عنصر في Tkinter، هو <b>بيتخلق</b> بس <b>مش بيظهر</b> لحد ما نقول لـ Tkinter فين يحطه. اللي بيحدد المكان اسمه <b>Geometry Manager</b> (مدير الترتيب).</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fn">no_layout.py</span><button class="copybtn" data-copy="cWhy">📋 نسخ</button></div>
+<pre class="code" id="cWhy"><span class="kw">import</span> tkinter <span class="kw">as</span> tk
+
+root = tk.<span class="fnc">Tk</span>()
+root.<span class="fnc">geometry</span>(<span class="str">"400x250"</span>)
+
+<span class="cmt"># ❌ العناصر اتخلقت بس مش هتظهر أبداً!</span>
+tk.<span class="fnc">Button</span>(root, text=<span class="str">"زر 1"</span>)
+tk.<span class="fnc">Button</span>(root, text=<span class="str">"زر 2"</span>)
+tk.<span class="fnc">Button</span>(root, text=<span class="str">"زر 3"</span>)
+
+<span class="cmt"># ✅ لازم مدير ترتيب يقول فين يحطهم</span>
+<span class="cmt"># btn.pack()  أو  btn.grid(...)  أو  btn.place(...)</span>
+
+root.<span class="fnc">mainloop</span>()</pre>
+    </div>
+    <div class="callout c-warn"><b>⚠️ القاعدة:</b> إنشاء العنصر ≠ عرض العنصر. لازم <code>pack()</code> أو <code>grid()</code> أو <code>place()</code> — وإلا النافذة تفضل فاضية! 👀</div>
+
+    <h3>🧠 التشبيه الذهني — 3 طرق لترتيب أوضتك</h3>
+    <table class="tbl">
+      <tr><th>الطريقة</th><th>التشبيه</th><th>المدير</th><th>مناسبة لـ</th></tr>
+      <tr><td>رفوف فوق بعض</td><td>🗄️ رف مكتبة: كتاب فوق كتاب</td><td><span class="mtag m-pack">pack()</span></td><td>واجهات بسيطة، أشرطة أدوات</td></tr>
+      <tr><td>بلاط / جدول</td><td>🔲 سيراميك: صف وعمود</td><td><span class="mtag m-grid">grid()</span></td><td>نماذج، آلة حاسبة، جداول</td></tr>
+      <tr><td>مسمار في الحيطة</td><td>📍 مسمار عند إحداثيات محددة</td><td><span class="mtag m-place">place()</span></td><td>حالات خاصة، شعار في زاوية</td></tr>
+      <tr><td>قواطع الغرفة</td><td>🧱 قاطع يقسم الأوضة</td><td><span class="mtag m-frame">Frame</span></td><td>تقسيم الواجهة لأقسام</td></tr>
+    </table>
+    <div class="callout c-info"><b>🎮 من الألعاب:</b> شاشة الإعدادات في أي لعبة مقسّمة: قائمة على الشمال، إعدادات في النص، أزرار تحت. ده بالظبط شغل الـ <b>Frame + grid + pack</b> مع بعض! 🎯</div>
+  </section>
+
+  <!-- PACK -->
+  <section id="pack" class="reveal" style="border-right-color:var(--pack)">
+    <h2 style="color:#c2410c;border-color:var(--pack)"><span class="badge b1">المستوى الأول</span> 🟢 pack() — الرفوف 📦</h2>
+    <p>أبسط مدير ترتيب. بيحط العناصر <b>ورا بعض</b> في اتجاه تختاره، وبيدي لكل عنصر «طرد» (parcel) خاص بيه.</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fn">pack_demo.py</span><button class="copybtn" data-copy="cPack">📋 نسخ</button></div>
+<pre class="code" id="cPack"><span class="kw">import</span> tkinter <span class="kw">as</span> tk
+
+root = tk.<span class="fnc">Tk</span>()
+root.<span class="fnc">title</span>(<span class="str">"pack — الرفوف"</span>)
+root.<span class="fnc">geometry</span>(<span class="str">"480x300"</span>)
+
+<span class="cmt"># شريط أدوات: أزرار جنب بعض من الشمال</span>
+toolbar = tk.<span class="fnc">Frame</span>(root, bg=<span class="str">"#0b1f33"</span>)
+toolbar.<span class="fnc">pack</span>(side=<span class="str">"top"</span>, fill=<span class="str">"x"</span>)
+
+<span class="kw">for</span> name <span class="kw">in</span> [<span class="str">"جديد"</span>, <span class="str">"فتح"</span>, <span class="str">"حفظ"</span>]:
+    tk.<span class="fnc">Button</span>(toolbar, text=name).<span class="fnc">pack</span>(
+        side=<span class="str">"left"</span>,      <span class="cmt"># جنب بعض</span>
+        padx=<span class="num">6</span>, pady=<span class="num">6</span>,   <span class="cmt"># مسافة خارجية</span>
+        ipadx=<span class="num">10</span>, ipady=<span class="num">4</span> <span class="cmt"># حشو داخلي</span>
+    )
+
+<span class="cmt"># محتوى يملأ باقي المساحة</span>
+body = tk.<span class="fnc">Label</span>(root, text=<span class="str">"المحتوى هنا"</span>, bg=<span class="str">"#eef4fa"</span>)
+body.<span class="fnc">pack</span>(side=<span class="str">"top"</span>, fill=<span class="str">"both"</span>, expand=<span class="kw">True</span>)
+
+<span class="cmt"># شريط حالة تحت</span>
+status = tk.<span class="fnc">Label</span>(root, text=<span class="str">"جاهز ✅"</span>, bg=<span class="str">"#dbeafe"</span>)
+status.<span class="fnc">pack</span>(side=<span class="str">"bottom"</span>, fill=<span class="str">"x"</span>)
+
+root.<span class="fnc">mainloop</span>()</pre>
+    </div>
+    <table class="tbl">
+      <tr><th>الباراميتر</th><th>القيم</th><th>بيعمل إيه؟</th></tr>
+      <tr><td><code>side</code></td><td>top / bottom / left / right</td><td>الناحية اللي العنصر بيلزق فيها</td></tr>
+      <tr><td><code>fill</code></td><td>none / x / y / both</td><td>يمتد أفقياً / رأسياً / الاتنين</td></tr>
+      <tr><td><code>expand</code></td><td>True / False</td><td>ياخد نصيبه من المساحة الفاضية</td></tr>
+      <tr><td><code>padx / pady</code></td><td>رقم بالبكسل</td><td>مسافة <b>خارج</b> العنصر</td></tr>
+      <tr><td><code>ipadx / ipady</code></td><td>رقم بالبكسل</td><td>حشو <b>داخل</b> العنصر (بيكبّره)</td></tr>
+    </table>
+    <div class="callout c-tip"><b>💡 الفرق الذهبي:</b> <code>pady</code> = مسافة بين العنصر وجاره (برّه). <code>ipady</code> = العنصر نفسه يبقى أطول (جوّه). جرّب الاتنين في المختبر وشوف الفرق! 🔍</div>
+    <div class="callout c-warn"><b>⚠️ فخ:</b> <code>fill="both"</code> لوحدها مش كفاية! لازم <code>expand=True</code> كمان عشان العنصر ياخد المساحة الفاضية ويملاها.</div>
+  </section>
+
+  <!-- GRID -->
+  <section id="grid" class="reveal" style="border-right-color:var(--grid)">
+    <h2 style="color:#1d4ed8;border-color:var(--grid)"><span class="badge b2">المستوى الثاني</span> 🟡 grid() — الجدول 🔲</h2>
+    <p>أقوى مدير ترتيب للواجهات الحقيقية. بيقسّم الحاوية لـ <b>صفوف وأعمدة</b> زي ورقة المربعات، وكل عنصر بياخد خلية أو أكتر.</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fn">grid_demo.py</span><button class="copybtn" data-copy="cGrid">📋 نسخ</button></div>
+<pre class="code" id="cGrid"><span class="kw">import</span> tkinter <span class="kw">as</span> tk
+
+root = tk.<span class="fnc">Tk</span>()
+root.<span class="fnc">title</span>(<span class="str">"grid — الجدول"</span>)
+root.<span class="fnc">geometry</span>(<span class="str">"420x220"</span>)
+
+<span class="cmt"># صف 0: عنوان ياخد العمودين</span>
+tk.<span class="fnc">Label</span>(root, text=<span class="str">"بيانات الطالب"</span>,
+         font=(<span class="str">"Arial"</span>, <span class="num">14</span>, <span class="str">"bold"</span>)).<span class="fnc">grid</span>(
+    row=<span class="num">0</span>, column=<span class="num">0</span>, columnspan=<span class="num">2</span>, pady=<span class="num">12</span>, sticky=<span class="str">"w"</span>)
+
+<span class="cmt"># صف 1 و 2: لیبل + حقل إدخال</span>
+tk.<span class="fnc">Label</span>(root, text=<span class="str">"الاسم"</span>).<span class="fnc">grid</span>(row=<span class="num">1</span>, column=<span class="num">0</span>, sticky=<span class="str">"w"</span>, padx=<span class="num">12</span>, pady=<span class="num">6</span>)
+name = tk.<span class="fnc">Entry</span>(root)
+name.<span class="fnc">grid</span>(row=<span class="num">1</span>, column=<span class="num">1</span>, sticky=<span class="str">"ew"</span>, padx=<span class="num">12</span>, pady=<span class="num">6</span>, ipady=<span class="num">4</span>)
+
+tk.<span class="fnc">Label</span>(root, text=<span class="str">"العمر"</span>).<span class="fnc">grid</span>(row=<span class="num">2</span>, column=<span class="num">0</span>, sticky=<span class="str">"w"</span>, padx=<span class="num">12</span>, pady=<span class="num">6</span>)
+age = tk.<span class="fnc">Entry</span>(root)
+age.<span class="fnc">grid</span>(row=<span class="num">2</span>, column=<span class="num">1</span>, sticky=<span class="str">"ew"</span>, padx=<span class="num">12</span>, pady=<span class="num">6</span>, ipady=<span class="num">4</span>)
+
+<span class="cmt"># 🔑 السر: العمود التاني يكبر مع النافذة</span>
+root.<span class="fnc">grid_columnconfigure</span>(<span class="num">1</span>, weight=<span class="num">1</span>)
+root.<span class="fnc">grid_rowconfigure</span>(<span class="num">3</span>, weight=<span class="num">1</span>)
+
+root.<span class="fnc">mainloop</span>()</pre>
+    </div>
+    <h3>🧭 sticky — بوصلة الالتصاق</h3>
+    <p><code>sticky</code> بتقول للعنصر يلزق في أنهي ناحية من الخلية بتاعته. الحروف اختصارات اتجاهات البوصلة:</p>
+    <table class="tbl">
+      <tr><th>القيمة</th><th>المعنى</th><th>النتيجة</th></tr>
+      <tr><td><code>"w"</code></td><td>West = غرب = شمال</td><td>يلزق على الشمال</td></tr>
+      <tr><td><code>"e"</code></td><td>East = شرق = يمين</td><td>يلزق على اليمين</td></tr>
+      <tr><td><code>"n"</code> / <code>"s"</code></td><td>North / South</td><td>فوق / تحت</td></tr>
+      <tr><td><code>"ew"</code></td><td>شرق + غرب</td><td>يمتد <b>أفقياً</b> بعرض الخلية</td></tr>
+      <tr><td><code>"ns"</code></td><td>شمال + جنوب</td><td>يمتد <b>رأسياً</b></td></tr>
+      <tr><td><code>"nsew"</code></td><td>الأربع اتجاهات</td><td>يملا الخلية بالكامل ⭐</td></tr>
+    </table>
+    <div class="callout c-star"><b>🌟 weight — سر الواجهة المتجاوبة:</b> افتراضياً الأعمدة <b>مش بتكبر</b> لما تكبّر النافذة! لازم تقول <code>root.grid_columnconfigure(i, weight=1)</code> عشان العمود ياخد نصيبه من المساحة الجديدة. من غير weight الواجهة بتفضل صغيرة في النص. 📏</div>
+    <div class="callout c-info"><b>📐 columnspan / rowspan:</b> لو عايز عنصر ياخد عرض عمودين → <code>columnspan=2</code>. ولو عايز ياخد ارتفاع صفين → <code>rowspan=2</code>. زي دمج الخلايا في Excel بالظبط! 🧮</div>
+  </section>
+
+  <!-- PLACE -->
+  <section id="place" class="reveal" style="border-right-color:var(--place)">
+    <h2 style="color:#be185d;border-color:var(--place)"><span class="badge b3">المستوى الثالث</span> 🔴 place() — المسمار 📍</h2>
+    <p>بتحدد مكان العنصر بإحداثيات صريحة. دقيقة جداً… بس <b>خطيرة</b> لأنها مش بتتأقلم مع تكبير النافذة.</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fn">place_demo.py</span><button class="copybtn" data-copy="cPlace">📋 نسخ</button></div>
+<pre class="code" id="cPlace"><span class="kw">import</span> tkinter <span class="kw">as</span> tk
+
+root = tk.<span class="fnc">Tk</span>()
+root.<span class="fnc">title</span>(<span class="str">"place — المسمار"</span>)
+root.<span class="fnc">geometry</span>(<span class="str">"460x300"</span>)
+root.<span class="fnc">configure</span>(bg=<span class="str">"#eef4fa"</span>)
+
+<span class="cmt"># 1) إحداثيات مطلقة بالبكسل</span>
+tk.<span class="fnc">Label</span>(root, text=<span class="str">"شعار"</span>, bg=<span class="str">"#fbbf24"</span>).<span class="fnc">place</span>(
+    x=<span class="num">20</span>, y=<span class="num">20</span>, width=<span class="num">90</span>, height=<span class="num">32</span>, anchor=<span class="str">"nw"</span>)
+
+<span class="cmt"># 2) إحداثيات نسبية (0.0 إلى 1.0) — تتأقلم شوية</span>
+tk.<span class="fnc">Button</span>(root, text=<span class="str">"في النص تماماً"</span>).<span class="fnc">place</span>(
+    relx=<span class="num">0.5</span>, rely=<span class="num">0.5</span>, anchor=<span class="str">"center"</span>,
+    width=<span class="num">160</span>, height=<span class="num">40</span>)
+
+<span class="cmt"># 3) في الزاوية تحت-يمين</span>
+tk.<span class="fnc">Label</span>(root, text=<span class="str">"v1.0"</span>, bg=<span class="str">"#dbeafe"</span>).<span class="fnc">place</span>(
+    relx=<span class="num">1.0</span>, rely=<span class="num">1.0</span>, anchor=<span class="str">"se"</span>, x=<span class="num">-10</span>, y=<span class="num">-10</span>)
+
+root.<span class="fnc">mainloop</span>()</pre>
+    </div>
+    <table class="tbl">
+      <tr><th>الباراميتر</th><th>بيعمل إيه؟</th></tr>
+      <tr><td><code>x, y</code></td><td>موقع بالبكسل من أعلى-شمال الحاوية</td></tr>
+      <tr><td><code>relx, rely</code></td><td>موقع نسبي: 0.0 = البداية، 0.5 = النص، 1.0 = النهاية</td></tr>
+      <tr><td><code>anchor</code></td><td>أنهي نقطة من العنصر تتثبت: nw / n / ne / w / center / e / sw / s / se</td></tr>
+      <tr><td><code>width, height</code></td><td>حجم صريح بالبكسل</td></tr>
+      <tr><td><code>relwidth, relheight</code></td><td>حجم نسبي من الحاوية</td></tr>
+    </table>
+    <div class="callout c-warn"><b>⚠️ امتى نتجنب place؟</b> لو المستخدم كبّر النافذة، العناصر <b>مش بتتحرك</b> وممكن تتقص أو تتراكب. استخدمها بس لحاجة ثابتة زي شعار أو علامة إصدار — مش للواجهة كلها! 🚫</div>
+    <div class="callout c-tip"><b>✅ الاستخدام الصح:</b> <code>place</code> جوه <code>Frame</code> صغير مخصص، والباقي كله <code>grid</code> أو <code>pack</code>. كده تستفيد من الدقة من غير ما تبوظ الواجهة.</div>
+  </section>
+
+  <!-- FRAME -->
+  <section id="frame" class="reveal" style="border-right-color:var(--frame)">
+    <h2 style="color:#0f766e;border-color:var(--frame)"><span class="badge b4">المستوى الرابع</span> 🟣 Frame — القواطع 🖼️</h2>
+    <div class="callout c-warn"><b>🚨 القاعدة الذهبية للمحاضرة:</b> ممنوع تستخدم <code>pack()</code> و <code>grid()</code> مع بعض جوّه <b>نفس الأب</b>! Tkinter بيدخل في صراع حسابات والبرنامج <b>يتجمّد</b> (hang) — مش رسالة خطأ، تجميد كامل! 😱</div>
+    <p><b>الحل؟</b> الـ <code>Frame</code>! حاوية بتقسم النافذة لأقسام، وكل قسم يقدر يستخدم مدير الترتيب اللي هو عايزه — لأن كل Frame أب مستقل.</p>
+    <div class="codewrap">
+      <div class="codebar"><span class="fn">frames_demo.py</span><button class="copybtn" data-copy="cFrame">📋 نسخ</button></div>
+<pre class="code" id="cFrame"><span class="kw">import</span> tkinter <span class="kw">as</span> tk
+
+root = tk.<span class="fnc">Tk</span>()
+root.<span class="fnc">title</span>(<span class="str">"Frame — القواطع"</span>)
+root.<span class="fnc">geometry</span>(<span class="str">"560x340"</span>)
+
+<span class="cmt"># الأب root بيستخدم pack فقط</span>
+header = tk.<span class="fnc">Frame</span>(root, bg=<span class="str">"#2563eb"</span>, height=<span class="num">54</span>)
+header.<span class="fnc">pack</span>(side=<span class="str">"top"</span>, fill=<span class="str">"x"</span>)
+header.<span class="fnc">pack_propagate</span>(<span class="kw">False</span>)   <span class="cmt"># نحافظ على الارتفاع</span>
+
+tk.<span class="fnc">Label</span>(header, text=<span class="str">"☀️ Sunshine T Academy"</span>,
+         bg=<span class="str">"#2563eb"</span>, fg=<span class="str">"white"</span>,
+         font=(<span class="str">"Arial"</span>, <span class="num">14</span>, <span class="str">"bold"</span>)).<span class="fnc">pack</span>(side=<span class="str">"right"</span>, padx=<span class="num">16</span>)
+
+<span class="cmt"># قسم وسط: هنا بنستخدم grid بأمان (أب مختلف!)</span>
+middle = tk.<span class="fnc">Frame</span>(root, bg=<span class="str">"#eef4fa"</span>)
+middle.<span class="fnc">pack</span>(side=<span class="str">"top"</span>, fill=<span class="str">"both"</span>, expand=<span class="kw">True</span>)
+
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">6</span>):
+    tk.<span class="fnc">Button</span>(middle, text=<span class="str">f"خلية {i+1}"</span>).<span class="fnc">grid</span>(
+        row=i // <span class="num">3</span>, column=i % <span class="num">3</span>,
+        sticky=<span class="str">"nsew"</span>, padx=<span class="num">8</span>, pady=<span class="num">8</span>, ipady=<span class="num">8</span>)
+
+<span class="kw">for</span> c <span class="kw">in</span> <span class="fn">range</span>(<span class="num">3</span>):
+    middle.<span class="fnc">grid_columnconfigure</span>(c, weight=<span class="num">1</span>)
+<span class="kw">for</span> r <span class="kw">in</span> <span class="fn">range</span>(<span class="num">2</span>):
+    middle.<span class="fnc">grid_rowconfigure</span>(r, weight=<span class="num">1</span>)
+
+<span class="cmt"># فوتر: pack تاني على root — تمام لأنه نفس المدير</span>
+footer = tk.<span class="fnc">Frame</span>(root, bg=<span class="str">"#0b1f33"</span>, height=<span class="num">32</span>)
+footer.<span class="fnc">pack</span>(side=<span class="str">"bottom"</span>, fill=<span class="str">"x"</span>)
+footer.<span class="fnc">pack_propagate</span>(<span class="kw">False</span>)
+
+root.<span class="fnc">mainloop</span>()</pre>
+    </div>
+    <div class="callout c-tip"><b>🧠 запомни:</b> المدير الواحد لكل أب. <code>root</code> كلها pack ✅ — <code>middle</code> كلها grid ✅ — مفيش تعارض لأنهم آباء مختلفين! 🎯</div>
+
+    <h3>⚔️ جرّب التعارض بنفسك — وشوف الحل</h3>
+    <p>اضغط الزرار وشوف إيه اللي بيحصل في الحالتين:</p>
+    <div style="margin-bottom:12px"><button class="btn btn-p" id="cfRun">▶ شغّل الحالتين</button> <button class="btn btn-ghost" id="cfReset">♻️ إعادة</button></div>
+    <div class="conflict">
+      <div class="cf-card bad">
+        <div class="cf-head">❌ pack + grid في نفس الأب</div>
+        <div class="cf-win" id="cfBadWin">
+          <div class="cf-w p">زر بـ pack</div>
+          <div class="cf-w">زر بـ grid</div>
+          <div class="cf-w p">زر بـ pack</div>
+          <div class="cf-overlay" id="cfBadOv"><div><div class="spin"></div>البرنامج متجمّد!<br><small style="font-weight:600">Tkinter بيدور في حسابات لا نهائية</small></div></div>
+        </div>
+        <div class="cf-note" id="cfBadNote">اضغط "شغّل الحالتين" عشان تشوف المشكلة…</div>
+      </div>
+      <div class="cf-card good">
+        <div class="cf-head">✅ Frame لكل مدير</div>
+        <div class="cf-win" id="cfGoodWin">
+          <div class="cf-w p">قسم pack (فوق)</div>
+          <div class="cf-w">قسم grid (وسط)</div>
+          <div class="cf-w p">قسم pack (تحت)</div>
+        </div>
+        <div class="cf-note" id="cfGoodNote">نفس العناصر بالظبط… بس مقسّمة على Frames.</div>
+      </div>
+    </div>
+    <div class="codewrap">
+      <div class="codebar"><span class="fn">conflict_fix.py — الغلط والحل</span><button class="copybtn" data-copy="cConflict">📋 نسخ</button></div>
+<pre class="code" id="cConflict"><span class="cmt"># ❌ غلط — نفس الأب root بمديرين مختلفين</span>
+tk.<span class="fnc">Button</span>(root, text=<span class="str">"A"</span>).<span class="fnc">pack</span>()
+tk.<span class="fnc">Button</span>(root, text=<span class="str">"B"</span>).<span class="fnc">grid</span>(row=<span class="num">0</span>, column=<span class="num">0</span>)
+<span class="cmt"># 💥 البرنامج يهنّج!</span>
+
+<span class="cmt"># ✅ صح — كل مدير في Frame لوحده</span>
+top = tk.<span class="fnc">Frame</span>(root)
+top.<span class="fnc">pack</span>(side=<span class="str">"top"</span>, fill=<span class="str">"x"</span>)
+tk.<span class="fnc">Button</span>(top, text=<span class="str">"A"</span>).<span class="fnc">pack</span>(side=<span class="str">"left"</span>)
+
+body = tk.<span class="fnc">Frame</span>(root)
+body.<span class="fnc">pack</span>(side=<span class="str">"top"</span>, fill=<span class="str">"both"</span>, expand=<span class="kw">True</span>)
+tk.<span class="fnc">Button</span>(body, text=<span class="str">"B"</span>).<span class="fnc">grid</span>(row=<span class="num">0</span>, column=<span class="num">0</span>)</pre>
+    </div>
+  </section>
+
+  <!-- ===== LAB ===== -->
+  <section id="lab" class="reveal" style="border-right-color:var(--warn)">
+    <h2 style="color:#b45309;border-color:var(--warn)">🧪 مختبر التخطيط — Layout Lab</h2>
+    <p>دي <b>محاكاة تعليمية</b> جوّه المتصفح. غيّر أي أداة على الشمال وشوف <b>النافذة والكود بيتغيروا في نفس اللحظة</b>! واضغط على أي عنصر عشان تشوف كوده بالظبط. 👆</p>
+    <div class="lab">
+      <div>
+        <div class="stage" id="stage">
+          <div class="ruler"></div>
+          <div class="tkwin" id="tkwin">
+            <div class="tk-bar" id="tkbar">
+              <span>📐</span>
+              <span class="mt" id="tkTitle">Layout Lab — pack</span>
+              <button class="mb">—</button><button class="mb">▢</button><button class="mb x">✕</button>
+            </div>
+            <div class="tk-body" id="tkBody"></div>
+          </div>
+          <span class="stagelabel" id="stageLabel">virtual window</span>
+        </div>
+        <div class="inspector">
+          <h4 id="insName">👆 اضغط على أي عنصر جوّه النافذة</h4>
+          <p id="insDesc">هتعرف اسمه، وإعدادات ترتيبه، والسطر اللي بيعمله في Python.</p>
+          <div class="ic" id="insCode">widget.pack(...)</div>
+        </div>
+        <div class="lablog" id="labLog"><div>🟢 Layout Lab ready — غيّر أي حاجة وشوف الكود!</div></div>
+      </div>
+
+      <div class="controls">
+        <div class="cg">
+          <h4>🧭 مدير الترتيب</h4>
+          <div class="seg" id="segMgr">
+            <button data-m="pack" class="on">pack</button>
+            <button data-m="grid">grid</button>
+            <button data-m="place">place</button>
+          </div>
+        </div>
+
+        <div class="cg" id="grpPack">
+          <h4><span class="mtag m-pack">pack</span> إعدادات الرفوف</h4>
+          <div class="ctl"><label>side — ناحية اللزق</label>
+            <select id="pSide"><option value="top">top — فوق بعض</option><option value="bottom">bottom — تحت بعض (مقلوب)</option><option value="left">left — جنب بعض</option><option value="right">right — جنب بعض (مقلوب)</option></select>
+          </div>
+          <div class="ctl"><label>fill — الامتداد</label>
+            <select id="pFill"><option value="none">none — بدون</option><option value="x">x — أفقي</option><option value="y">y — رأسي</option><option value="both">both — الاتنين</option></select>
+          </div>
+          <label class="check"><input type="checkbox" id="pExpand"> expand — ياخد المساحة الفاضية</label>
+        </div>
+
+        <div class="cg" id="grpGrid" style="display:none">
+          <h4><span class="mtag m-grid">grid</span> إعدادات الجدول</h4>
+          <div class="ctl"><label>عدد الأعمدة (columns)</label>
+            <div class="stepper"><button data-step="cols:-1">−</button><span id="oCols">3</span><button data-step="cols:1">+</button></div>
+          </div>
+          <div class="ctl"><label>sticky — بوصلة الالتصاق</label>
+            <div class="compass" id="compass">
+              <button data-s="nw">nw</button><button data-s="n">n</button><button data-s="ne">ne</button>
+              <button data-s="w">w</button><button data-s="center" class="on">•</button><button data-s="e">e</button>
+              <button data-s="sw">sw</button><button data-s="s">s</button><button data-s="se">se</button>
+            </div>
+            <div class="stretchrow" id="stretchRow">
+              <button data-s="ew">ew ↔</button><button data-s="ns">ns ↕</button><button data-s="nsew">nsew ⛶</button>
+            </div>
+          </div>
+          <div class="ctl"><label>columnspan للعنصر الأول</label>
+            <div class="stepper"><button data-step="cspan:-1">−</button><span id="oCspan">1</span><button data-step="cspan:1">+</button></div>
+          </div>
+          <div class="ctl"><label>rowspan للعنصر الأول</label>
+            <div class="stepper"><button data-step="rspan:-1">−</button><span id="oRspan">1</span><button data-step="rspan:1">+</button></div>
+          </div>
+          <div class="ctl"><label>وزن الأعمدة (column weight) <output id="oCW">1</output></label><input type="range" id="gCW" min="0" max="3" value="1"></div>
+          <label class="check"><input type="checkbox" id="gRW" checked> وزن الصفوف (row weight = 1)</label>
+        </div>
+
+        <div class="cg" id="grpPlace" style="display:none">
+          <h4><span class="mtag m-place">place</span> إعدادات المسمار</h4>
+          <div class="ctl"><label>x — البعد من الشمال <output id="oPX">30</output></label><input type="range" id="lX" min="0" max="300" value="30"></div>
+          <div class="ctl"><label>y — البعد من فوق <output id="oPY">24</output></label><input type="range" id="lY" min="0" max="240" value="24"></div>
+          <div class="ctl"><label>تباعد العناصر (step) <output id="oPS">34</output></label><input type="range" id="lStep" min="0" max="70" value="34"></div>
+          <div class="ctl"><label>anchor — نقطة التثبيت</label>
+            <select id="lAnchor"><option value="nw">nw — أعلى شمال</option><option value="center">center — المركز</option><option value="se">se — أسفل يمين</option><option value="ne">ne — أعلى يمين</option><option value="sw">sw — أسفل شمال</option></select>
+          </div>
+          <div class="ctl"><label>width <output id="oPW">120</output></label><input type="range" id="lW" min="60" max="240" value="120"></div>
+          <div class="ctl"><label>height <output id="oPH">38</output></label><input type="range" id="lH" min="24" max="90" value="38"></div>
+          <label class="check"><input type="checkbox" id="lRel"> استخدم relx / rely (نسبي)</label>
+        </div>
+
+        <div class="cg">
+          <h4>📏 الحشو والهوامش (مشترك)</h4>
+          <div class="ctl"><label>padx — مسافة أفقية خارجية <output id="oPadX">8</output></label><input type="range" id="cPadX" min="0" max="30" value="8"></div>
+          <div class="ctl"><label>pady — مسافة رأسية خارجية <output id="oPadY">8</output></label><input type="range" id="cPadY" min="0" max="30" value="8"></div>
+          <div class="ctl"><label>ipady — حشو داخلي <output id="oIPadY">6</output></label><input type="range" id="cIPadY" min="0" max="24" value="6"></div>
+        </div>
+
+        <div class="cg">
+          <h4>🪟 النافذة والعناصر</h4>
+          <div class="ctl"><label>عدد العناصر <output id="oCount">4</output></label><input type="range" id="cCount" min="2" max="6" value="4"></div>
+          <div class="ctl"><label>عرض النافذة <output id="oWinW">520</output></label><input type="range" id="cWinW" min="320" max="720" value="520"></div>
+          <div class="ctl"><label>ارتفاع النافذة <output id="oWinH">340</output></label><input type="range" id="cWinH" min="220" max="440" value="340"></div>
+          <div class="ctl"><label>لون العناصر</label>
+            <div class="swatches">
+              <input type="color" id="cColor" value="#2563eb">
+              <button class="sw" style="background:#2563eb" data-c="#2563eb"></button>
+              <button class="sw" style="background:#f97316" data-c="#f97316"></button>
+              <button class="sw" style="background:#0d9488" data-c="#0d9488"></button>
+              <button class="sw" style="background:#db2777" data-c="#db2777"></button>
+              <button class="sw" style="background:#8b5cf6" data-c="#8b5cf6"></button>
+            </div>
+          </div>
+          <label class="check"><input type="checkbox" id="cGuides" checked> 🔍 إظهار حدود الخلايا (وضع المعلّم)
+          </label>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-a" id="bRandom">🎲 عشوائي</button>
+          <button class="btn btn-t" id="bReset">♻️ إعادة ضبط</button>
+          <button class="btn btn-p" id="bCopy">📋 نسخ الكود</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="codewrap labcode" id="labCodeWrap">
+      <div class="codebar"><span class="fn" id="labFile">layout_lab.py — بيتولد لايف من أدواتك! ⚡</span><button class="copybtn" id="bCopy2">📋 نسخ الكود</button></div>
+      <pre class="code" id="labCode"></pre>
+    </div>
+    <div class="callout c-tip"><b>▶ شغّله على جهازك:</b> انسخ الكود ← احفظه في <code>layout_lab.py</code> ← افتح VS Code ← في التيرمنال <code>python layout_lab.py</code>. هتشوف نفس الترتيب بالظبط! 🚀</div>
+    <div class="callout c-warn"><b>📌 أمانة تقنية:</b> اللي فوق <b>محاكاة بالـ HTML</b>. Tkinter نفسه <b>مش بيشتغل جوّه المتصفح ولا Colab</b> — لازم Python على جهازك. الكود اللي بيتولد هو الكود الحقيقي. ✅</div>
+  </section>
+
+  <!-- ERRORS -->
+  <section class="reveal">
+    <h2>🐛 ركن الأخطاء الشائعة وحلولها</h2>
+    <table class="tbl">
+      <tr><th>الغلطة ❌</th><th>النتيجة 💥</th><th>التصحيح ✅</th></tr>
+      <tr><td><code>pack()</code> + <code>grid()</code> في نفس الأب</td><td>البرنامج يتجمّد</td><td>استخدم <code>Frame</code> لكل مدير</td></tr>
+      <tr><td>نسيان <code>.pack()/.grid()</code></td><td>العنصر مش ظاهر</td><td>نادِ مدير الترتيب بعد الإنشاء</td></tr>
+      <tr><td>نسيان <code>weight</code></td><td>الواجهة مش بتكبر</td><td><code>grid_columnconfigure(i, weight=1)</code></td></tr>
+      <tr><td>نسيان <code>sticky</code></td><td>العنصر واقف في نص الخلية</td><td><code>sticky="ew"</code> أو <code>"nsew"</code></td></tr>
+      <tr><td><code>fill="both"</code> بدون <code>expand</code></td><td>مش بيملا الفراغ</td><td><code>fill="both", expand=True</code></td></tr>
+      <tr><td>نفس row و column لعنصرين</td><td>واحد فوق التاني</td><td>غيّر الإحداثيات أو استخدم span</td></tr>
+      <tr><td><code>grid_columnconfigure</code> على العنصر</td><td>AttributeError</td><td>ناديها على <b>الأب</b> (root أو Frame)</td></tr>
+      <tr><td><code>place()</code> بدون width/height</td><td>حجم افتراضي غريب</td><td>حدد <code>width</code> و <code>height</code></td></tr>
+      <tr><td>خلط <code>padx</code> مع <code>ipadx</code></td><td>مسافات مش متوقعة</td><td>pad = خارج، ipad = داخل</td></tr>
+      <tr><td>Frame بارتفاع ثابت من غير حماية</td><td>الارتفاع بيتقلّص</td><td><code>pack_propagate(False)</code></td></tr>
+    </table>
+  </section>
+
+  <!-- PROJECT -->
+  <section id="project" class="reveal">
+    <h2>🎨 مشروع المحاضرة — نموذج تسجيل دخول مرتب 🔐</h2>
+    <div class="project">
+      <h3>📐 Login Form — grid + Frame + weight</h3>
+      <p>هنعمل نموذج تسجيل دخول احترافي: عنوان ياخد عمودين، ليبلز على الشمال وحقول تتمدد على اليمين، وأزرار جوّه Frame مستقل. وكله بيكبر ويصغر مع النافذة!</p>
+      <div class="steps">
+        <div class="stp"><b>1️⃣ افتح المحرر</b>اعمل ملف <code>login_form.py</code></div>
+        <div class="stp"><b>2️⃣ انسخ الكود</b>من الزرار تحت</div>
+        <div class="stp"><b>3️⃣ شغّل</b><code>python login_form.py</code></div>
+        <div class="stp"><b>4️⃣ جرّب التكبير</b>كبّر النافذة وشوف الحقول بتتمدد! ↔️</div>
+      </div>
+      <h3>👀 الشكل المتوقع</h3>
+      <div class="loginmock">
+        <div class="lm-card">
+          <h4>☀️ تسجيل الدخول</h4>
+          <small>Layout Managers — grid + Frame</small>
+          <div class="lm-row"><label>المستخدم</label><input id="lmUser" placeholder="admin"></div>
+          <div class="lm-row"><label>كلمة السر</label><input id="lmPass" type="password" placeholder="1234"></div>
+          <div class="lm-btns"><button class="go" id="lmGo">دخول</button><button class="cl" id="lmClear">مسح</button></div>
+          <div class="lm-hint" id="lmHint">جرّب: admin / 1234</div>
+        </div>
+      </div>
+    </div>
+    <div class="codewrap">
+      <div class="codebar"><span class="fn">login_form.py — المشروع الكامل 🚀</span><button class="copybtn" data-copy="cProject">📋 نسخ</button></div>
+<pre class="code" id="cProject"><span class="cmt"># ═══════════════════════════════════════</span>
+<span class="cmt"># 🔐 Login Form — Sunshine T Academy</span>
+<span class="cmt"># المحاضرة 8: Layout Managers</span>
+<span class="cmt"># ═══════════════════════════════════════</span>
+<span class="kw">import</span> tkinter <span class="kw">as</span> tk
+<span class="kw">from</span> tkinter <span class="kw">import</span> messagebox
+
+BG   = <span class="str">"#eef4fa"</span>
+CARD = <span class="str">"#ffffff"</span>
+INK  = <span class="str">"#0b1f33"</span>
+BLUE = <span class="str">"#2563eb"</span>
+
+
+<span class="kw">def</span> <span class="fnc">try_login</span>():
+    user = user_entry.<span class="fnc">get</span>().<span class="fnc">strip</span>()
+    pwd  = pwd_entry.<span class="fnc">get</span>()
+
+    <span class="kw">if</span> <span class="kw">not</span> user <span class="kw">or</span> <span class="kw">not</span> pwd:
+        messagebox.<span class="fnc">showwarning</span>(<span class="str">"ناقص بيانات"</span>, <span class="str">"اكتب المستخدم وكلمة السر"</span>)
+        <span class="kw">return</span>
+
+    <span class="kw">if</span> user == <span class="str">"admin"</span> <span class="kw">and</span> pwd == <span class="str">"1234"</span>:
+        messagebox.<span class="fnc">showinfo</span>(<span class="str">"نجاح"</span>, <span class="str">f"أهلاً {user}! ✅"</span>)
+    <span class="kw">else</span>:
+        messagebox.<span class="fnc">showerror</span>(<span class="str">"فشل"</span>, <span class="str">"بيانات غير صحيحة ❌"</span>)
+
+
+<span class="kw">def</span> <span class="fnc">clear_fields</span>():
+    user_entry.<span class="fnc">delete</span>(<span class="num">0</span>, tk.END)
+    pwd_entry.<span class="fnc">delete</span>(<span class="num">0</span>, tk.END)
+    user_entry.<span class="fnc">focus</span>()
+
+
+<span class="cmt"># ===== النافذة =====</span>
+root = tk.<span class="fnc">Tk</span>()
+root.<span class="fnc">title</span>(<span class="str">"تسجيل الدخول — Sunshine T Academy"</span>)
+root.<span class="fnc">geometry</span>(<span class="str">"470x370"</span>)
+root.<span class="fnc">minsize</span>(<span class="num">410</span>, <span class="num">330</span>)
+root.<span class="fnc">configure</span>(bg=BG)
+
+<span class="cmt"># root كلها grid — صف وعمود واحد بيكبر</span>
+root.<span class="fnc">grid_rowconfigure</span>(<span class="num">0</span>, weight=<span class="num">1</span>)
+root.<span class="fnc">grid_columnconfigure</span>(<span class="num">0</span>, weight=<span class="num">1</span>)
+
+<span class="cmt"># ===== الكارت =====</span>
+card = tk.<span class="fnc">Frame</span>(root, bg=CARD, padx=<span class="num">24</span>, pady=<span class="num">20</span>)
+card.<span class="fnc">grid</span>(row=<span class="num">0</span>, column=<span class="num">0</span>, padx=<span class="num">24</span>, pady=<span class="num">24</span>, sticky=<span class="str">"nsew"</span>)
+
+card.<span class="fnc">grid_columnconfigure</span>(<span class="num">0</span>, weight=<span class="num">0</span>)   <span class="cmt"># الليبلز ثابتة</span>
+card.<span class="fnc">grid_columnconfigure</span>(<span class="num">1</span>, weight=<span class="num">1</span>)   <span class="cmt"># الحقول تتمدد ⭐</span>
+
+title = tk.<span class="fnc">Label</span>(card, text=<span class="str">"☀️ تسجيل الدخول"</span>,
+                 font=(<span class="str">"Arial"</span>, <span class="num">18</span>, <span class="str">"bold"</span>), bg=CARD, fg=BLUE)
+title.<span class="fnc">grid</span>(row=<span class="num">0</span>, column=<span class="num">0</span>, columnspan=<span class="num">2</span>, sticky=<span class="str">"w"</span>, pady=(<span class="num">0</span>, <span class="num">4</span>))
+
+sub = tk.<span class="fnc">Label</span>(card, text=<span class="str">"Layout Managers — grid + Frame"</span>,
+               font=(<span class="str">"Arial"</span>, <span class="num">10</span>), bg=CARD, fg=<span class="str">"#94a3b8"</span>)
+sub.<span class="fnc">grid</span>(row=<span class="num">1</span>, column=<span class="num">0</span>, columnspan=<span class="num">2</span>, sticky=<span class="str">"w"</span>, pady=(<span class="num">0</span>, <span class="num">18</span>))
+
+<span class="cmt"># ===== الصفوف =====</span>
+tk.<span class="fnc">Label</span>(card, text=<span class="str">"المستخدم"</span>, bg=CARD, fg=INK,
+         font=(<span class="str">"Arial"</span>, <span class="num">11</span>, <span class="str">"bold"</span>)).<span class="fnc">grid</span>(
+    row=<span class="num">2</span>, column=<span class="num">0</span>, sticky=<span class="str">"w"</span>, pady=<span class="num">8</span>, padx=(<span class="num">0</span>, <span class="num">10</span>))
+
+user_entry = tk.<span class="fnc">Entry</span>(card, font=(<span class="str">"Arial"</span>, <span class="num">12</span>))
+user_entry.<span class="fnc">grid</span>(row=<span class="num">2</span>, column=<span class="num">1</span>, sticky=<span class="str">"ew"</span>, pady=<span class="num">8</span>, ipady=<span class="num">5</span>)
+
+tk.<span class="fnc">Label</span>(card, text=<span class="str">"كلمة السر"</span>, bg=CARD, fg=INK,
+         font=(<span class="str">"Arial"</span>, <span class="num">11</span>, <span class="str">"bold"</span>)).<span class="fnc">grid</span>(
+    row=<span class="num">3</span>, column=<span class="num">0</span>, sticky=<span class="str">"w"</span>, pady=<span class="num">8</span>, padx=(<span class="num">0</span>, <span class="num">10</span>))
+
+pwd_entry = tk.<span class="fnc">Entry</span>(card, font=(<span class="str">"Arial"</span>, <span class="num">12</span>), show=<span class="str">"•"</span>)
+pwd_entry.<span class="fnc">grid</span>(row=<span class="num">3</span>, column=<span class="num">1</span>, sticky=<span class="str">"ew"</span>, pady=<span class="num">8</span>, ipady=<span class="num">5</span>)
+
+<span class="cmt"># ===== Frame للأزرار: هنا pack بأمان (أب مختلف) =====</span>
+buttons = tk.<span class="fnc">Frame</span>(card, bg=CARD)
+buttons.<span class="fnc">grid</span>(row=<span class="num">4</span>, column=<span class="num">0</span>, columnspan=<span class="num">2</span>, sticky=<span class="str">"ew"</span>, pady=(<span class="num">20</span>, <span class="num">0</span>))
+
+login_btn = tk.<span class="fnc">Button</span>(buttons, text=<span class="str">"دخول"</span>, bg=BLUE, fg=<span class="str">"white"</span>,
+                      font=(<span class="str">"Arial"</span>, <span class="num">12</span>, <span class="str">"bold"</span>), relief=<span class="str">"flat"</span>,
+                      command=try_login)
+login_btn.<span class="fnc">pack</span>(side=<span class="str">"right"</span>, fill=<span class="str">"x"</span>, expand=<span class="kw">True</span>,
+               padx=(<span class="num">6</span>, <span class="num">0</span>), ipady=<span class="num">7</span>)
+
+clear_btn = tk.<span class="fnc">Button</span>(buttons, text=<span class="str">"مسح"</span>, bg=<span class="str">"#e2e8f0"</span>, fg=INK,
+                      font=(<span class="str">"Arial"</span>, <span class="num">12</span>), relief=<span class="str">"flat"</span>,
+                      command=clear_fields)
+clear_btn.<span class="fnc">pack</span>(side=<span class="str">"right"</span>, fill=<span class="str">"x"</span>, expand=<span class="kw">True</span>,
+               padx=(<span class="num">0</span>, <span class="num">6</span>), ipady=<span class="num">7</span>)
+
+hint = tk.<span class="fnc">Label</span>(card, text=<span class="str">"جرّب: admin / 1234"</span>,
+                bg=CARD, fg=<span class="str">"#94a3b8"</span>, font=(<span class="str">"Arial"</span>, <span class="num">9</span>))
+hint.<span class="fnc">grid</span>(row=<span class="num">5</span>, column=<span class="num">0</span>, columnspan=<span class="num">2</span>, sticky=<span class="str">"w"</span>, pady=(<span class="num">14</span>, <span class="num">0</span>))
+
+<span class="cmt"># الصف الفاضي ياخد باقي المساحة</span>
+card.<span class="fnc">grid_rowconfigure</span>(<span class="num">6</span>, weight=<span class="num">1</span>)
+
+user_entry.<span class="fnc">focus</span>()
+root.<span class="fnc">bind</span>(<span class="str">"&lt;Return&gt;"</span>, <span class="kw">lambda</span> e: <span class="fnc">try_login</span>())
+
+root.<span class="fnc">mainloop</span>()</pre>
+    </div>
+    <div class="callout c-info"><b>🔍 تتبّع الترتيب:</b> <code>root</code> فيها grid بصف واحد بيكبر → <code>card</code> جوّاها grid بعمودين (واحد ثابت وواحد بيتمدد) → <code>buttons</code> Frame جوّه الكارت بيستخدم pack. <b>3 آباء، كل واحد مديره — مفيش تعارض!</b> ✅</div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="reveal">
+    <h2>🧠 اختبر معلوماتك — 10 أسئلة</h2>
+    <div class="quizhead">
+      <p style="margin:0">اختار إجابة واحدة لكل سؤال — التصحيح والتفسير فوراً! ✅❌</p>
+      <span class="qscore" id="qScore">النتيجة: 0 / 10</span>
+    </div>
+    <div id="quizBox"></div>
+    <div class="qres" id="qRes">
+      <div class="bn" id="qFinal"></div>
+      <p id="qMsg" style="font-weight:800;color:#065f46"></p>
+      <button class="btn btn-p" onclick="resetQuiz()">🔄 جرّب تاني</button>
+    </div>
+  </section>
+
+  <!-- TASKS -->
+  <section id="tasks" class="reveal">
+    <h2>🎯 5 مهام مميزة — تحدي المبرمجين!</h2>
+    <div class="task t1">
+      <h4>🥉 المهمة 1: شريط أدوات <span class="pts">20 نقطة</span></h4>
+      <p>اعمل نافذة فيها 4 أزرار جنب بعض من الشمال باستخدام <code>pack(side="left")</code> مع <code>padx=6</code> و <code>ipadx=12</code>.</p>
+      <div class="hint">💡 <b>تلميح:</b> حط الأزرار جوّه <code>Frame</code> وخليه <code>pack(fill="x")</code></div>
+    </div>
+    <div class="task t2">
+      <h4>🥉 المهمة 2: لوحة 2×3 <span class="pts">25 نقطة</span></h4>
+      <p>اعمل 6 أزرار في صفين و3 أعمدة بـ <code>grid</code>، وكل زر يملا خليته بالكامل ويكبر مع النافذة.</p>
+      <div class="hint">💡 <b>تلميح:</b> <code>sticky="nsew"</code> + <code>grid_columnconfigure(c, weight=1)</code> لكل عمود + weight للصفوف</div>
+    </div>
+    <div class="task t3">
+      <h4>🥈 المهمة 3: نموذج بيانات <span class="pts">35 نقطة</span></h4>
+      <p>اعمل نموذج فيه: عنوان ياخد عمودين، و3 صفوف (الاسم / العمر / المدينة) كل صف ليبل + Entry. الحقول تتمدد لما تكبّر النافذة.</p>
+      <div class="hint">💡 <b>تلميح:</b> <code>columnspan=2</code> للعنوان + <code>sticky="ew"</code> للحقول + weight=1 للعمود التاني</div>
+    </div>
+    <div class="task t4">
+      <h4>🥈 المهمة 4: واجهة 3 أقسام <span class="pts">40 نقطة</span></h4>
+      <p>اقسم النافذة لـ: هيدر ثابت فوق، محتوى في النص (شبكة أزرار)، فوتر ثابت تحت. استخدم <code>pack</code> على النافذة و <code>grid</code> جوّه المحتوى.</p>
+      <div class="hint">💡 <b>تلميح:</b> 3 × <code>Frame</code> + <code>pack_propagate(False)</code> للهيدر والفوتر عشان يحافظوا على ارتفاعهم</div>
+    </div>
+    <div class="task t5">
+      <h4>🎨 المهمة 5: لوحة تحكم كاملة <span class="pts">60 نقطة</span></h4>
+      <p>صمّم لوحة تحكم فيها: هيدر فيه شعار بـ pack، سايدبار على الشمال فيه 4 أزرار، منطقة محتوى بشبكة 3×2، فوتر فيه حالة البرنامج، وشعار صغير في زاوية المحتوى بـ <code>place</code>. كل حاجة تتجاوب مع التكبير.</p>
+      <div class="hint">💡 <b>تلميح:</b> <code>root</code> pack → <code>middle</code> Frame فيه pack (سايدبار + content) → <code>content</code> Frame فيه grid → الشعار <code>place(relx=1, rely=1, anchor="se")</code></div>
+    </div>
+    <div class="callout c-star"><b>📦 طريقة التسليم:</b> ملف <code>.py</code> + صورة للنافذة وهي صغيرة وأخرى وهي مكبّرة (عشان ن证明 الـ weight شغال) + سطرين تشرح فيهم ليه استخدمت Frame. ارفعهم قبل المحاضرة الجاية! 📤</div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section class="summary reveal">
+    <h2>📋 ملخص المحاضرة</h2>
+    <div class="sumgrid">
+      <div class="sumitem"><h4>📦 pack</h4><code>side · fill · expand</code></div>
+      <div class="sumitem"><h4>🔲 grid</h4><code>row · column · sticky</code></div>
+      <div class="sumitem"><h4>📍 place</h4><code>x · y · anchor</code></div>
+      <div class="sumitem"><h4>🖼️ Frame</h4><code>حاوية = أب مستقل</code></div>
+      <div class="sumitem"><h4>↔️ التمدد</h4><code>grid_columnconfigure(weight=1)</code></div>
+      <div class="sumitem"><h4>🧭 sticky</h4><code>"ew" · "nsew" · "w"</code></div>
+      <div class="sumitem"><h4>🔗 الدمج</h4><code>columnspan · rowspan</code></div>
+      <div class="sumitem"><h4>📏 المسافات</h4><code>padx/pady</code> خارج · <code>ipadx/ipady</code> داخل</div>
+    </div>
+    <h3>🌟 القواعد الذهبية:</h3>
+    <ul class="golden">
+      <li>✅ <b>مدير واحد لكل أب</b> — ممنوع خلط <code>pack</code> و <code>grid</code> في نفس الحاوية</li>
+      <li>✅ عايز تخلط؟ استخدم <code>Frame</code> لكل قسم</li>
+      <li>✅ من غير <code>weight</code> الواجهة <b>مش بتكبر</b> مع النافذة</li>
+      <li>✅ من غير <code>sticky</code> العنصر بيقف في نص الخلية</li>
+      <li>✅ <code>fill="both"</code> لازم معاها <code>expand=True</code></li>
+      <li>✅ <code>place</code> للحاجات الثابتة بس — مش للواجهة كلها</li>
+      <li>✅ ارسم الواجهة على ورقة الأول (صفوف وأعمدة) وبعدين اكتب الكود 📝</li>
+    </ul>
+  </section>
+
+  <!-- NEXT -->
+  <section class="next reveal">
+    <span class="big">⌨️</span>
+    <h2>➡️ المحاضرة القادمة</h2>
+    <h3>Inputs &amp; Variables — الإدخال والمتغيرات</h3>
+    <p>هنغوص في <code>Entry</code> و <code>Text</code>، ونتعلم <code>StringVar</code> و <code>trace</code> عشان الواجهة تتحدّث لحظياً مع كل حرف يكتبه المستخدم!</p>
+    <p style="margin-top:8px;opacity:.9">🎴 المشروع: بطاقة طالب بمعاينة حية</p>
+  </section>
+
+  <div class="footer reveal">
+    <div class="logo">☀️ Sunshine T Academy ☀️</div>
+    <p><b>بنحوّل الحلم لكود 💻</b></p>
+    <p>الترتيب الصح بيخلّي أي واجهة تبان احترافية — كمّل التجربة! 📐</p>
+  </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ================= helpers ================= */
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2400)}
+function copyText(txt){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(()=>toast('✅ اتنسخ الكود!')).catch(()=>fbCopy(txt))}
+  else fbCopy(txt);
+}
+function fbCopy(t){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast('✅ اتنسخ الكود!')}catch(e){toast('❌ انسخ يدوياً من فضلك')}a.remove()}
+document.querySelectorAll('.copybtn[data-copy]').forEach(b=>b.addEventListener('click',()=>copyText($(b.dataset.copy).innerText)));
+
+/* favicon PNG fallback */
+(function(){try{
+  const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d');
+  x.fillStyle='#0b1f33';if(x.roundRect){x.beginPath();x.roundRect(0,0,64,64,14);x.fill()}else x.fillRect(0,0,64,64);
+  x.strokeStyle='rgba(56,189,248,.5)';x.lineWidth=2;
+  [22,42].forEach(v=>{x.beginPath();x.moveTo(0,v);x.lineTo(64,v);x.stroke();x.beginPath();x.moveTo(v,0);x.lineTo(v,64);x.stroke()});
+  x.strokeStyle='#fbbf24';x.lineWidth=4.5;x.lineCap='round';
+  [[32,10,32,17],[32,47,32,54],[10,32,17,32],[47,32,54,32]].forEach(l=>{x.beginPath();x.moveTo(l[0],l[1]);x.lineTo(l[2],l[3]);x.stroke()});
+  x.fillStyle='#fbbf24';x.beginPath();x.arc(32,32,11,0,7);x.fill();
+  x.fillStyle='#0b1f33';x.beginPath();x.arc(28,30,1.8,0,7);x.fill();x.beginPath();x.arc(36,30,1.8,0,7);x.fill();
+  x.strokeStyle='#0b1f33';x.lineWidth=2.2;x.beginPath();x.moveTo(27,35);x.quadraticCurveTo(32,39,37,35);x.stroke();
+  const l=document.createElement('link');l.rel='icon';l.type='image/png';l.href=c.toDataURL('image/png');document.head.appendChild(l);
+}catch(e){}})();
+
+/* scroll + reveal + active nav */
+const navLinks=[...document.querySelectorAll('.links a')];
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement;
+  $('readbar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';
+  let cur='';
+  navLinks.forEach(a=>{const el=document.querySelector(a.getAttribute('href'));if(el&&el.getBoundingClientRect().top<160)cur=a.getAttribute('href')});
+  navLinks.forEach(a=>a.classList.toggle('on',a.getAttribute('href')===cur));
+},{passive:true});
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{threshold:.07});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* ================= LAYOUT LAB ================= */
+const LABELS=["تسجيل","تعديل","حذف","بحث","حفظ","خروج"];
+const DEF={mgr:'pack',count:4,winW:520,winH:340,padx:8,pady:8,ipady:6,color:'#2563eb',guides:true,
+  pSide:'top',pFill:'none',pExpand:false,
+  cols:3,sticky:'center',cspan:1,rspan:1,cw:1,rw:true,
+  lx:30,ly:24,lstep:34,lanchor:'nw',lw:120,lh:38,lrel:false};
+let L={...DEF},selected=null,plainCode='';
+const stage=$('stage'),tkwin=$('tkwin'),body=$('tkBody');
+
+function scale(){
+  const availW=stage.clientWidth-36, availH=stage.clientHeight-52;
+  return Math.min(availW/L.winW, availH/L.winH, 1.15);
+}
+function logLab(m){const b=$('labLog');const d=document.createElement('div');d.textContent=m;b.appendChild(d);while(b.children.length>6)b.removeChild(b.firstChild);b.scrollTop=b.scrollHeight}
+
+const STICKY_MAP={
+  nw:['start','start'],n:['start','center'],ne:['start','end'],
+  w:['center','start'],center:['center','center'],e:['center','end'],
+  sw:['end','start'],s:['end','center'],se:['end','end'],
+  ew:['center','stretch'],ns:['stretch','center'],nsew:['stretch','stretch']
+};
+const ANCHOR_TF={nw:'translate(0,0)',center:'translate(-50%,-50%)',se:'translate(-100%,-100%)',ne:'translate(-100%,0)',sw:'translate(0,-100%)'};
+
+function widgetCode(i){
+  const name=LABELS[i];
+  if(L.mgr==='pack'){
+    return `b${i} = tk.Button(root, text="${name}")\nb${i}.pack(side="${L.pSide}", fill="${L.pFill}", expand=${L.pExpand?'True':'False'},\n         padx=${L.padx}, pady=${L.pady}, ipady=${L.ipady})`;
+  }
+  if(L.mgr==='grid'){
+    const r=Math.floor(i/L.cols), c=i%L.cols;
+    const span=(i===0&&L.cspan>1?`, columnspan=${L.cspan}`:'')+(i===0&&L.rspan>1?`, rowspan=${L.rspan}`:'');
+    return `b${i} = tk.Button(root, text="${name}")\nb${i}.grid(row=${r}, column=${c}${span},\n         sticky="${L.sticky}", padx=${L.padx}, pady=${L.pady}, ipady=${L.ipady})`;
+  }
+  const px=L.lx+i*L.lstep, py=L.ly+i*L.lstep;
+  const pos=L.lrel?`relx=${(px/L.winW).toFixed(2)}, rely=${(py/L.winH).toFixed(2)}`:`x=${px}, y=${py}`;
+  return `b${i} = tk.Button(root, text="${name}")\nb${i}.place(${pos}, anchor="${L.lanchor}",\n           width=${L.lw}, height=${L.lh})`;
+}
+const INS_DESC={
+  pack:'pack بيدي كل عنصر «طرد» في الاتجاه اللي تختاره. fill بيحدد الامتداد، و expand بيديه نصيب من الفراغ.',
+  grid:'grid بيحط العنصر في خلية (row, column). sticky بيقول يلزق فين، و span بيدمج خلايا.',
+  place:'place بيثبّت العنصر بإحداثيات صريحة. anchor هي نقطة العنصر اللي بتتثبت عند الإحداثيات.'
+};
+function selectWidget(i){
+  selected=i;
+  [...body.querySelectorAll('.wgt')].forEach(w=>w.classList.toggle('sel',+w.dataset.i===i));
+  $('insName').textContent=`🔘 العنصر رقم ${i+1} — "${LABELS[i]}" · ${L.mgr}()`;
+  $('insDesc').textContent=INS_DESC[L.mgr];
+  $('insCode').textContent=widgetCode(i);
+  logLab(`👆 selected widget #${i+1} (${L.mgr})`);
+}
+
+function buildCode(){
+  const head=`import tkinter as tk\n\nroot = tk.Tk()\nroot.title("Layout Lab — ${L.mgr}")\nroot.geometry("${L.winW}x${L.winH}")\nroot.configure(bg="#eef4fa")\n\n`;
+  const mk=(i)=>`b${i} = tk.Button(root, text="${LABELS[i]}", bg="${L.color}", fg="white",\n              font=("Arial", 12, "bold"), relief="flat")`;
+  let plain=head, html=`<span class="kw">import</span> tkinter <span class="kw">as</span> tk\n\nroot = tk.<span class="fnc">Tk</span>()\nroot.<span class="fnc">title</span>(<span class="str">"Layout Lab — ${L.mgr}"</span>)\nroot.<span class="fnc">geometry</span>(<span class="str">"${L.winW}x${L.winH}"</span>)\nroot.<span class="fnc">configure</span>(bg=<span class="str">"#eef4fa"</span>)\n\n`;
+  const mkH=(i)=>`b${i} = tk.<span class="fnc">Button</span>(root, text=<span class="str">"${LABELS[i]}"</span>, bg=<span class="str">"${L.color}"</span>, fg=<span class="str">"white"</span>,\n              font=(<span class="str">"Arial"</span>, <span class="num">12</span>, <span class="str">"bold"</span>), relief=<span class="str">"flat"</span>)`;
+
+  if(L.mgr==='pack'){
+    for(let i=0;i<L.count;i++){
+      const call=`b${i}.pack(side="${L.pSide}", fill="${L.pFill}", expand=${L.pExpand?'True':'False'},\n         padx=${L.padx}, pady=${L.pady}, ipady=${L.ipady})`;
+      plain+=mk(i)+'\n'+call+'\n\n';
+      html+=mkH(i)+`\nb${i}.<span class="fnc">pack</span>(side=<span class="str">"${L.pSide}"</span>, fill=<span class="str">"${L.pFill}"</span>, expand=<span class="kw">${L.pExpand?'True':'False'}</span>,\n         padx=<span class="num">${L.padx}</span>, pady=<span class="num">${L.pady}</span>, ipady=<span class="num">${L.ipady}</span>)\n\n`;
+    }
+  } else if(L.mgr==='grid'){
+    let rows=1;
+    for(let i=0;i<L.count;i++){
+      const r=Math.floor(i/L.cols), c=i%L.cols;
+      const cs=(i===0?L.cspan:1), rs=(i===0?L.rspan:1);
+      rows=Math.max(rows,r+rs);
+      const span=(cs>1?`, columnspan=${cs}`:'')+(rs>1?`, rowspan=${rs}`:'');
+      const call=`b${i}.grid(row=${r}, column=${c}${span},\n         sticky="${L.sticky}", padx=${L.padx}, pady=${L.pady}, ipady=${L.ipady})`;
+      plain+=mk(i)+'\n'+call+'\n\n';
+      html+=mkH(i)+`\nb${i}.<span class="fnc">grid</span>(row=<span class="num">${r}</span>, column=<span class="num">${c}</span>${cs>1?`, columnspan=<span class="num">${cs}</span>`:''}${rs>1?`, rowspan=<span class="num">${rs}</span>`:''},\n         sticky=<span class="str">"${L.sticky}"</span>, padx=<span class="num">${L.padx}</span>, pady=<span class="num">${L.pady}</span>, ipady=<span class="num">${L.ipady}</span>)\n\n`;
+    }
+    plain+=`# 🔑 الأعمدة والصفوف تكبر مع النافذة\n`;
+    html+=`<span class="cmt"># 🔑 الأعمدة والصفوف تكبر مع النافذة</span>\n`;
+    for(let c=0;c<L.cols;c++){
+      plain+=`root.grid_columnconfigure(${c}, weight=${L.cw})\n`;
+      html+=`root.<span class="fnc">grid_columnconfigure</span>(<span class="num">${c}</span>, weight=<span class="num">${L.cw}</span>)\n`;
+    }
+    for(let r=0;r<rows;r++){
+      plain+=`root.grid_rowconfigure(${r}, weight=${L.rw?1:0})\n`;
+      html+=`root.<span class="fnc">grid_rowconfigure</span>(<span class="num">${r}</span>, weight=<span class="num">${L.rw?1:0}</span>)\n`;
+    }
+    plain+='\n';html+='\n';
+  } else {
+    for(let i=0;i<L.count;i++){
+      const px=L.lx+i*L.lstep, py=L.ly+i*L.lstep;
+      const posP=L.lrel?`relx=${(px/L.winW).toFixed(2)}, rely=${(py/L.winH).toFixed(2)}`:`x=${px}, y=${py}`;
+      const posH=L.lrel?`relx=<span class="num">${(px/L.winW).toFixed(2)}</span>, rely=<span class="num">${(py/L.winH).toFixed(2)}</span>`:`x=<span class="num">${px}</span>, y=<span class="num">${py}</span>`;
+      plain+=mk(i)+`\nb${i}.place(${posP}, anchor="${L.lanchor}",\n           width=${L.lw}, height=${L.lh})\n\n`;
+      html+=mkH(i)+`\nb${i}.<span class="fnc">place</span>(${posH}, anchor=<span class="str">"${L.lanchor}"</span>,\n           width=<span class="num">${L.lw}</span>, height=<span class="num">${L.lh}</span>)\n\n`;
+    }
+    plain+=`# ⚠️ place مش بتتأقلم مع تكبير النافذة\n\n`;
+    html+=`<span class="cmt"># ⚠️ place مش بتتأقلم مع تكبير النافذة</span>\n\n`;
+  }
+  plain+='root.mainloop()';
+  html+='root.<span class="fnc">mainloop</span>()';
+  plainCode=plain;
+  $('labCode').innerHTML=html;
+  $('labFile').textContent=`layout_lab_${L.mgr}.py — بيتولد لايف ⚡`;
+  const w=$('labCodeWrap');w.classList.remove('flash');void w.offsetWidth;w.classList.add('flash');
+}
+
+function render(){
+  const s=scale();
+  tkwin.style.width=(L.winW*s)+'px';
+  tkwin.style.height=(L.winH*s)+'px';
+  const bar=$('tkbar');
+  bar.style.height=(28*s)+'px';bar.style.fontSize=(12*s)+'px';
+  $('tkTitle').textContent=`Layout Lab — ${L.mgr}`;
+  bar.querySelectorAll('.mb').forEach(b=>{b.style.width=(18*s)+'px';b.style.height=(16*s)+'px';b.style.fontSize=(9*s)+'px'});
+  $('stageLabel').textContent=`${L.winW} × ${L.winH} px · scale ${s.toFixed(2)}×`;
+  body.style.background='#eef4fa';
+  body.innerHTML='';
+  body.style.display='';body.style.position='relative';
+  body.style.flexDirection='';body.style.gap='';body.style.padding='0';
+  body.style.gridTemplateColumns='';body.style.gridAutoRows='';body.style.alignContent='';body.style.justifyContent='';
+
+  const fs=Math.max(9,12*s), pad=Math.max(2,L.ipady*s);
+
+  function mkW(i){
+    const w=document.createElement('div');
+    w.className='wgt'+(selected===i?' sel':'');
+    w.dataset.i=i;
+    w.textContent=LABELS[i];
+    w.style.background=L.color;
+    w.style.fontSize=fs+'px';
+    w.style.padding=`${pad}px ${Math.max(6,12*s)}px`;
+    w.addEventListener('click',()=>selectWidget(i));
+    return w;
+  }
+
+  if(L.mgr==='pack'){
+    const dir=(L.pSide==='top'||L.pSide==='bottom')?'column':'row';
+    const rev=(L.pSide==='bottom'||L.pSide==='right');
+    body.style.display='flex';
+    body.style.flexDirection=dir+(rev?'-reverse':'');
+    for(let i=0;i<L.count;i++){
+      const p=document.createElement('div');
+      p.className='parcel'+(L.guides?' guided':'');
+      p.style.margin=`${L.pady*s}px ${L.padx*s}px`;
+      if(L.pExpand) p.style.flex='1 1 0';
+      if(dir==='column'){p.style.width='auto';p.style.alignSelf='stretch'}
+      else {p.style.alignSelf='stretch'}
+      const w=mkW(i);
+      const fx=(L.pFill==='x'||L.pFill==='both'), fy=(L.pFill==='y'||L.pFill==='both');
+      if(dir==='column'){ if(fx)w.style.width='100%'; if(fy){w.style.height='100%';p.style.alignItems='stretch'} }
+      else { if(fy)w.style.height='100%'; if(fx){w.style.width='100%';p.style.justifyContent='stretch'} }
+      p.appendChild(w);body.appendChild(p);
+    }
+  } else if(L.mgr==='grid'){
+    let rows=1;
+    for(let i=0;i<L.count;i++){rows=Math.max(rows,Math.floor(i/L.cols)+(i===0?L.rspan:1))}
+    body.style.display='grid';
+    body.style.gridTemplateColumns=`repeat(${L.cols}, ${L.cw>0?'minmax(0,1fr)':'max-content'})`;
+    body.style.gridTemplateRows=`repeat(${rows}, ${L.rw?'minmax(0,1fr)':'max-content'})`;
+    body.style.gridAutoRows=L.rw?'minmax(0,1fr)':'max-content';
+    body.style.gap=`${L.pady*s}px ${L.padx*s}px`;
+    body.style.justifyContent=L.cw>0?'stretch':'center';
+    body.style.alignContent=L.rw?'stretch':'center';
+    if(L.guides){
+      const g=document.createElement('div');
+      g.className='gridguide';
+      g.style.gridTemplateColumns=body.style.gridTemplateColumns;
+      g.style.gridTemplateRows=body.style.gridTemplateRows;
+      g.style.gap=body.style.gap;
+      for(let k=0;k<rows*L.cols;k++)g.appendChild(document.createElement('i'));
+      body.appendChild(g);
+    }
+    const [al,ju]=STICKY_MAP[L.sticky]||STICKY_MAP.center;
+    for(let i=0;i<L.count;i++){
+      const w=mkW(i);
+      w.style.position='relative';w.style.zIndex='1';
+      w.style.alignSelf=al;w.style.justifySelf=ju;
+      if(i===0){
+        if(L.cspan>1)w.style.gridColumn=`span ${Math.min(L.cspan,L.cols)}`;
+        if(L.rspan>1)w.style.gridRow=`span ${Math.min(L.rspan,rows)}`;
+      }
+      body.appendChild(w);
+    }
+  } else {
+    if(L.guides){
+      const ch=document.createElement('div');ch.className='crosshair';
+      const h=document.createElement('i');h.style.cssText=`left:0;right:0;top:${L.ly*s}px;height:1px`;
+      const v=document.createElement('i');v.style.cssText=`top:0;bottom:0;left:${L.lx*s}px;width:1px`;
+      ch.appendChild(h);ch.appendChild(v);body.appendChild(ch);
+    }
+    for(let i=0;i<L.count;i++){
+      const w=mkW(i);
+      const px=L.lx+i*L.lstep, py=L.ly+i*L.lstep;
+      w.style.position='absolute';
+      w.style.left=(L.lrel?(px/L.winW)*L.winW*s:px*s)+'px';
+      w.style.top=(L.lrel?(py/L.winH)*(L.winH-28)*s:py*s)+'px';
+      w.style.width=(L.lw*s)+'px';w.style.height=(L.lh*s)+'px';
+      w.style.padding='0';
+      w.style.transform=ANCHOR_TF[L.lanchor]||'none';
+      body.appendChild(w);
+    }
+  }
+  // outputs
+  $('oCount').textContent=L.count;$('oWinW').textContent=L.winW;$('oWinH').textContent=L.winH;
+  $('oPadX').textContent=L.padx;$('oPadY').textContent=L.pady;$('oIPadY').textContent=L.ipady;
+  $('oCols').textContent=L.cols;$('oCspan').textContent=L.cspan;$('oRspan').textContent=L.rspan;$('oCW').textContent=L.cw;
+  $('oPX').textContent=L.lx;$('oPY').textContent=L.ly;$('oPS').textContent=L.lstep;$('oPW').textContent=L.lw;$('oPH').textContent=L.lh;
+  if(selected!==null&&selected<L.count)$('insCode').textContent=widgetCode(selected);
+  buildCode();
+}
+
+/* controls wiring */
+$('segMgr').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-m]');if(!b)return;
+  L.mgr=b.dataset.m;selected=null;
+  [...$('segMgr').children].forEach(x=>x.classList.toggle('on',x===b));
+  $('grpPack').style.display=L.mgr==='pack'?'':'none';
+  $('grpGrid').style.display=L.mgr==='grid'?'':'none';
+  $('grpPlace').style.display=L.mgr==='place'?'':'none';
+  $('insName').textContent='👆 اضغط على أي عنصر جوّه النافذة';
+  $('insDesc').textContent=INS_DESC[L.mgr];
+  $('insCode').textContent=L.mgr==='pack'?'widget.pack(side=..., fill=..., expand=...)':L.mgr==='grid'?'widget.grid(row=..., column=..., sticky=...)':'widget.place(x=..., y=..., anchor=...)';
+  logLab('🧭 manager → '+L.mgr+'()');render();
+});
+$('pSide').addEventListener('change',e=>{L.pSide=e.target.value;render();logLab('pack side="'+L.pSide+'"')});
+$('pFill').addEventListener('change',e=>{L.pFill=e.target.value;render();logLab('pack fill="'+L.pFill+'"')});
+$('pExpand').addEventListener('change',e=>{L.pExpand=e.target.checked;render();logLab('pack expand='+L.pExpand)});
+document.querySelectorAll('[data-step]').forEach(b=>b.addEventListener('click',()=>{
+  const [k,d]=b.dataset.step.split(':');const dv=+d;
+  if(k==='cols')L.cols=Math.max(1,Math.min(4,L.cols+dv));
+  if(k==='cspan')L.cspan=Math.max(1,Math.min(L.cols,L.cspan+dv));
+  if(k==='rspan')L.rspan=Math.max(1,Math.min(3,L.rspan+dv));
+  render();logLab(`grid ${k} = ${L[k]}`);
+}));
+function pickSticky(v,btn){
+  L.sticky=v;
+  document.querySelectorAll('#compass button,#stretchRow button').forEach(x=>x.classList.toggle('on',x===btn));
+  render();logLab('grid sticky="'+v+'"');
+}
+$('compass').addEventListener('click',e=>{const b=e.target.closest('button');if(b)pickSticky(b.dataset.s,b)});
+$('stretchRow').addEventListener('click',e=>{const b=e.target.closest('button');if(b)pickSticky(b.dataset.s,b)});
+$('gCW').addEventListener('input',e=>{L.cw=+e.target.value;render()});
+$('gRW').addEventListener('change',e=>{L.rw=e.target.checked;render();logLab('row weight = '+(L.rw?1:0))});
+[['lX','lx'],['lY','ly'],['lStep','lstep'],['lW','lw'],['lH','lh']].forEach(([id,k])=>{
+  $(id).addEventListener('input',e=>{L[k]=+e.target.value;render()});
+});
+$('lAnchor').addEventListener('change',e=>{L.lanchor=e.target.value;render();logLab('place anchor="'+L.lanchor+'"')});
+$('lRel').addEventListener('change',e=>{L.lrel=e.target.checked;render();logLab(L.lrel?'place → relx/rely':'place → x/y')});
+[['cPadX','padx'],['cPadY','pady'],['cIPadY','ipady'],['cCount','count'],['cWinW','winW'],['cWinH','winH']].forEach(([id,k])=>{
+  $(id).addEventListener('input',e=>{L[k]=+e.target.value;if(k==='count'&&selected!==null&&selected>=L.count)selected=null;render()});
+});
+$('cColor').addEventListener('input',e=>{L.color=e.target.value;render()});
+document.querySelectorAll('.sw[data-c]').forEach(b=>b.addEventListener('click',()=>{L.color=b.dataset.c;$('cColor').value=b.dataset.c;render();logLab('bg="'+b.dataset.c+'"')}));
+$('cGuides').addEventListener('change',e=>{L.guides=e.target.checked;render();logLab(L.guides?'🔍 guides ON':'🔍 guides OFF')});
+
+function syncInputs(){
+  $('pSide').value=L.pSide;$('pFill').value=L.pFill;$('pExpand').checked=L.pExpand;
+  $('gCW').value=L.cw;$('gRW').checked=L.rw;
+  $('lX').value=L.lx;$('lY').value=L.ly;$('lStep').value=L.lstep;$('lAnchor').value=L.lanchor;$('lW').value=L.lw;$('lH').value=L.lh;$('lRel').checked=L.lrel;
+  $('cPadX').value=L.padx;$('cPadY').value=L.pady;$('cIPadY').value=L.ipady;$('cCount').value=L.count;$('cWinW').value=L.winW;$('cWinH').value=L.winH;
+  $('cColor').value=L.color;$('cGuides').checked=L.guides;
+  [...$('segMgr').children].forEach(x=>x.classList.toggle('on',x.dataset.m===L.mgr));
+  $('grpPack').style.display=L.mgr==='pack'?'':'none';
+  $('grpGrid').style.display=L.mgr==='grid'?'':'none';
+  $('grpPlace').style.display=L.mgr==='place'?'':'none';
+  document.querySelectorAll('#compass button,#stretchRow button').forEach(x=>x.classList.toggle('on',x.dataset.s===L.sticky));
+}
+$('bReset').addEventListener('click',()=>{L={...DEF};selected=null;syncInputs();render();logLab('♻️ reset');toast('♻️ رجعنا للإعدادات الأصلية!')});
+$('bRandom').addEventListener('click',()=>{
+  const mg=['pack','grid','place'];
+  L.mgr=mg[Math.floor(Math.random()*3)];
+  L.count=2+Math.floor(Math.random()*5);
+  L.padx=Math.floor(Math.random()*22);L.pady=Math.floor(Math.random()*22);L.ipady=Math.floor(Math.random()*18);
+  L.color=['#2563eb','#f97316','#0d9488','#db2777','#8b5cf6'][Math.floor(Math.random()*5)];
+  if(L.mgr==='pack'){L.pSide=['top','bottom','left','right'][Math.floor(Math.random()*4)];L.pFill=['none','x','y','both'][Math.floor(Math.random()*4)];L.pExpand=Math.random()>.5}
+  if(L.mgr==='grid'){L.cols=1+Math.floor(Math.random()*4);L.sticky=['nw','n','e','center','ew','nsew','w','s'][Math.floor(Math.random()*8)];L.cspan=1+Math.floor(Math.random()*Math.min(3,L.cols));L.rspan=1+Math.floor(Math.random()*2);L.cw=Math.floor(Math.random()*3);L.rw=Math.random()>.3}
+  if(L.mgr==='place'){L.lx=Math.floor(Math.random()*160);L.ly=Math.floor(Math.random()*120);L.lstep=Math.floor(Math.random()*60);L.lanchor=['nw','center','se','ne','sw'][Math.floor(Math.random()*5)];L.lw=70+Math.floor(Math.random()*150);L.lh=26+Math.floor(Math.random()*50);L.lrel=Math.random()>.6}
+  selected=null;syncInputs();render();logLab('🎲 randomize → '+L.mgr);toast('🎲 إعدادات عشوائية جديدة!');
+});
+$('bCopy').addEventListener('click',()=>copyText(plainCode));
+$('bCopy2').addEventListener('click',()=>copyText(plainCode));
+window.addEventListener('resize',render);
+syncInputs();render();
+
+/* ================= CONFLICT DEMO ================= */
+let cfTimers=[];
+function cfReset(){
+  cfTimers.forEach(clearTimeout);cfTimers=[];
+  document.querySelectorAll('#cfBadWin .cf-w,#cfGoodWin .cf-w').forEach(w=>w.classList.remove('show'));
+  $('cfBadOv').classList.remove('show');
+  $('cfBadNote').textContent='اضغط "شغّل الحالتين" عشان تشوف المشكلة…';
+  $('cfGoodNote').textContent='نفس العناصر بالظبط… بس مقسّمة على Frames.';
+}
+$('cfReset').addEventListener('click',cfReset);
+$('cfRun').addEventListener('click',()=>{
+  cfReset();
+  const bad=[...document.querySelectorAll('#cfBadWin .cf-w')];
+  const good=[...document.querySelectorAll('#cfGoodWin .cf-w')];
+  bad.forEach((w,i)=>cfTimers.push(setTimeout(()=>w.classList.add('show'),200+i*260)));
+  good.forEach((w,i)=>cfTimers.push(setTimeout(()=>w.classList.add('show'),200+i*260)));
+  cfTimers.push(setTimeout(()=>{
+    $('cfBadNote').innerHTML='⏳ Tkinter بيحاول يحسب مكان العناصر… pack بيقول اتجاه و grid بيقول صفوف — الحسابات بتلف على بعضها!';
+  },1000));
+  cfTimers.push(setTimeout(()=>{
+    $('cfBadOv').classList.add('show');
+    $('cfBadNote').innerHTML='💥 <b>البرنامج متجمّد!</b> مفيش رسالة خطأ — النافذة بس مش بتستجيب. لازم تقفل العملية.';
+  },1900));
+  cfTimers.push(setTimeout(()=>{
+    $('cfGoodNote').innerHTML='✅ <b>اشتغل تمام!</b> كل Frame أب مستقل، فكل مدير بيحسب لوحده من غير صراع. ده الحل الصح دايماً.';
+  },1900));
+});
+
+/* ================= LOGIN MOCK ================= */
+function lmLogin(){
+  const u=$('lmUser').value.trim(),p=$('lmPass').value;
+  const h=$('lmHint');
+  if(!u||!p){h.textContent='⚠️ اكتب المستخدم وكلمة السر';h.style.color='#d97706';return}
+  if(u==='admin'&&p==='1234'){h.textContent='✅ أهلاً admin! تم تسجيل الدخول';h.style.color='#059669'}
+  else{h.textContent='❌ بيانات غير صحيحة — جرّب admin / 1234';h.style.color='#dc2626'}
+}
+$('lmGo').addEventListener('click',lmLogin);
+$('lmClear').addEventListener('click',()=>{$('lmUser').value='';$('lmPass').value='';$('lmHint').textContent='جرّب: admin / 1234';$('lmHint').style.color='#94a3b8';$('lmUser').focus()});
+$('lmPass').addEventListener('keydown',e=>{if(e.key==='Enter')lmLogin()});
+
+/* ================= QUIZ ================= */
+const QUIZ=[
+ {q:'أي مدير ترتيب بيحط العناصر في صفوف وأعمدة؟',o:['pack()','grid()','place()','frame()'],a:1,w:'grid() بيقسّم الحاوية لصفوف (row) وأعمدة (column) زي ورقة المربعات — الأنسب للنماذج والجداول.'},
+ {q:'في pack، أي قيمة لـ side تحط العناصر جنب بعض من الشمال؟',o:['top','bottom','left','center'],a:2,w:'side="left" بيرص العناصر جنب بعض بادئاً من الشمال. top و bottom بيرصّوهم فوق بعض.'},
+ {q:'ماذا تعني sticky="ew" في grid؟',o:['يلزق فوق','يمتد أفقياً بعرض الخلية','يمتد رأسياً','يقف في المركز'],a:1,w:'e = East (يمين) و w = West (شمال). لما تكتبهم مع بعض العنصر بيتمدد أفقياً ويملا عرض الخلية.'},
+ {q:'عايز العمود يكبر لما المستخدم يكبّر النافذة. تستخدم إيه؟',o:['sticky="nsew" فقط','expand=True','grid_columnconfigure(i, weight=1)','pack(fill="x")'],a:2,w:'weight هو اللي بيوزّع المساحة الجديدة على الأعمدة. من غيره العمود يفضل بحجمه الأصلي حتى لو النافذة كبرت.'},
+ {q:'ما القاعدة الذهبية عن pack و grid؟',o:['ينفع نخلطهم عادي','ممنوع في نفس الأب — نستخدم Frame','grid أقدم من pack','pack للصور فقط'],a:1,w:'خلطهم في نفس الحاوية بيخلي Tkinter يدخل في حسابات لا نهائية والبرنامج يتجمّد. الحل: Frame لكل مدير.'},
+ {q:'place() بتحدد مكان العنصر بإيه؟',o:['صف وعمود','اتجاه (side)','إحداثيات x/y أو relx/rely','وزن (weight)'],a:2,w:'place بتستخدم إحداثيات صريحة بالبكسل (x, y) أو نسبية (relx, rely) مع anchor لتحديد نقطة التثبيت.'},
+ {q:'أي باراميتر بيعمل مسافة خارجية حول العنصر؟',o:['ipadx / ipady','padx / pady','width / height','weight'],a:1,w:'padx و pady = مسافة برّه العنصر (بينه وبين جاره). ipadx و ipady = حشو جوّه العنصر بيكبّر حجمه.'},
+ {q:'ipady=10 بيعمل إيه؟',o:['يبعد العنصر 10px عن جاره','يزوّد ارتفاع العنصر من الداخل','يغيّر لون العنصر','يحذف العنصر'],a:1,w:'البادئة i تعني inner (داخلي). فالعنصر نفسه بيبقى أطول بـ 20px (10 فوق + 10 تحت).'},
+ {q:'columnspan=2 معناها إيه؟',o:['العنصر في العمود 2','العنصر ياخد عرض عمودين','العنصر يتكرر مرتين','خطأ في الكود'],a:1,w:'columnspan بيدمج الخلايا أفقياً — العنصر ياخد عرض عمودين بدل واحد. rowspan بيعمل نفس الحكاية رأسياً.'},
+ {q:'ليه بنستخدم Frame في الواجهات الكبيرة؟',o:['عشان نزوّد الألوان','عشان نقسم النافذة لأقسام وكل قسم يستخدم مدير ترتيب مختلف بأمان','عشان نسرع البرنامج','عشان نحذف العناصر'],a:1,w:'كل Frame أب مستقل. فتقدر تستخدم pack على root و grid جوّه Frame من غير أي تعارض — وده أساس الواجهات الاحترافية.'}
+];
+let qScore=0,qDone=0;
+function buildQuiz(){
+  const box=$('quizBox');box.innerHTML='';qScore=0;qDone=0;
+  $('qScore').textContent='النتيجة: 0 / 10';$('qRes').classList.remove('show');
+  QUIZ.forEach((item,i)=>{
+    const card=document.createElement('div');card.className='qcard';
+    const h=document.createElement('h4');h.textContent='س'+(i+1)+': '+item.q;card.appendChild(h);
+    const opts=document.createElement('div');opts.className='qopts';
+    item.o.forEach((opt,j)=>{
+      const b=document.createElement('button');b.className='qopt';b.textContent=opt;
+      b.addEventListener('click',()=>{
+        if(opts.dataset.done)return;opts.dataset.done='1';
+        opts.querySelectorAll('.qopt').forEach(x=>x.disabled=true);
+        if(j===item.a){b.classList.add('ok');b.textContent+=' ✅';qScore++}
+        else{b.classList.add('bad');b.textContent+=' ❌';opts.children[item.a].classList.add('ok');opts.children[item.a].textContent+=' ✅'}
+        const why=document.createElement('div');why.className='qwhy show';why.textContent='💡 '+item.w;card.appendChild(why);
+        qDone++;$('qScore').textContent='النتيجة: '+qScore+' / 10';
+        if(qDone===QUIZ.length)finishQuiz();
+      });
+      opts.appendChild(b);
+    });
+    card.appendChild(opts);box.appendChild(card);
+  });
+}
+function finishQuiz(){
+  const r=$('qRes');r.classList.add('show');
+  $('qFinal').textContent=qScore+' / 10';
+  $('qMsg').textContent=qScore>=9?'🏆 أسطوري! إنت جاهز تصمّم أي واجهة زي المحترفين!'
+    :qScore>=7?'🌟 ممتاز جداً! راجع الأسئلة اللي غلطت فيها وبس.'
+    :qScore>=5?'👍 كويس! ارجع للمختبر وجرّب المدراء التلاتة بإيدك.'
+    :'💪 ولا يهمك! اقرأ الملخص وجرّب المختبر تاني — هتظبط!';
+  r.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function resetQuiz(){buildQuiz();$('quiz').scrollIntoView({behavior:'smooth'})}
+buildQuiz();
+</script>
+</body>
+</html>
